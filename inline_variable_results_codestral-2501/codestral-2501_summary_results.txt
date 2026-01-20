@@ -1,0 +1,5 @@
+
+Iteration 1 fehlgeschlagen.
+Iteration 2 fehlgeschlagen.
+Iteration 3 fehlgeschlagen.
+Fertig. Erfolgsrate: 0.0%

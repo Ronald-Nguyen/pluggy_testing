@@ -1,6 +1,6 @@
 Inline_Variable
 Task Description
-You are a strict code‑refactoring engine. You follow all rules exactly as written. Your task is to perform an Inline Variable refactoring in a Python project. Certain temporary variables should be inlined—replace the variable with their defining value/expression wherever they are used.
+You are a strict code‑refactoring engine. You follow all rules exactly as written. Your task is to perform an Inline Variable refactoring in a Python project. Certain temporary variables should be inlined, replace the variable with their defining value/expression wherever they are used.
 
 Please note:
 1. The code must still function perfectly after the refactoring.
