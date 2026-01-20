@@ -1,0 +1,59 @@
+Iteration 1
+Timestamp: 2026-01-20T20:19:57.765662
+Success: False
+
+============================================================
+STDOUT:
+============================= test session starts =============================
+platform win32 -- Python 3.14.2, pytest-9.0.2, pluggy-0.1.dev918+gfc4045693
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\Users\ronal\pluggy_testing
+configfile: tox.ini
+testpaths: testing
+plugins: anyio-4.12.1, hypothesis-6.148.8, benchmark-5.2.3, cov-7.0.0
+collected 127 items
+
+testing\test_details.py ..........                                       [  7%]
+testing\test_helpers.py ......                                           [ 12%]
+testing\test_hookcaller.py ......................                        [ 29%]
+testing\test_invocations.py ...............                              [ 41%]
+testing\test_multicall.py ........................                       [ 60%]
+testing\test_pluginmanager.py .........................................  [ 92%]
+testing\test_refactoring.py s.F                                          [ 95%]
+testing\test_result.py .                                                 [ 96%]
+testing\test_tracer.py ....                                              [ 99%]
+testing\test_warnings.py .                                               [100%]
+
+================================== FAILURES ===================================
+_ TestGetterSetter.test_hookcaller_spec_is_readonly_property_and_behavior_unchanged _
+
+self = <test_refactoring.TestGetterSetter object at 0x0000011CE33D16D0>
+
+    def test_hookcaller_spec_is_readonly_property_and_behavior_unchanged(self):
+        pm = PluginManager("example")
+        hookspec = HookspecMarker("example")
+        hookimpl = HookimplMarker("example")
+    
+        class Hooks:
+            @hookspec
+            def he_method1(self, x):
+                """spec"""
+    
+        pm.add_hookspecs(Hooks)
+        hc = pm.hook.he_method1
+    
+        # HookCaller.spec must be exposed as a read-only property
+        prop = inspect.getattr_static(HookCaller, "spec")
+>       assert isinstance(prop, property), "HookCaller.spec should be a @property"
+E       AssertionError: HookCaller.spec should be a @property
+E       assert False
+E        +  where False = isinstance(<member 'spec' of 'HookCaller' objects>, property)
+
+testing\test_refactoring.py:47: AssertionError
+=========================== short test summary info ===========================
+SKIPPED [1] testing\test_refactoring.py:23: Skipping test for inlining variable name
+FAILED testing/test_refactoring.py::TestGetterSetter::test_hookcaller_spec_is_readonly_property_and_behavior_unchanged
+================== 1 failed, 125 passed, 1 skipped in 0.76s ===================
+
+============================================================
+STDERR:

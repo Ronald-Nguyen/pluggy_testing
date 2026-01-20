@@ -8,7 +8,7 @@ from pathlib import Path
 from datetime import datetime
 from unittest import result
 
-REFACTORING = 'inline_variable' 
+REFACTORING = 'getter_setter' 
 PATH = 'src/pluggy'
 ITERATIONS = 10
 GEMINI3 = 'gemini-3-pro-preview'
