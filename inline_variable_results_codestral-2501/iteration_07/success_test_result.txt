@@ -1,6 +1,6 @@
-Iteration 2
-Timestamp: 2026-01-20T12:41:23.542297
-Success: False
+Iteration 7
+Timestamp: 2026-01-20T15:22:24.760045
+Success: True
 
 ============================================================
 STDOUT:
@@ -16,7 +16,7 @@ collected 126 items
 testing\test_details.py ..........                                       [  7%]
 testing\test_helpers.py ......                                           [ 12%]
 testing\test_hookcaller.py ......................                        [ 30%]
-testing\test_inline.py F.                                                [ 31%]
+testing\test_inline.py ..                                                [ 31%]
 testing\test_invocations.py ...............                              [ 43%]
 testing\test_multicall.py ........................                       [ 62%]
 testing\test_pluginmanager.py .........................................  [ 95%]
@@ -24,21 +24,7 @@ testing\test_result.py .                                                 [ 96%]
 testing\test_tracer.py ....                                              [ 99%]
 testing\test_warnings.py .                                               [100%]
 
-================================== FAILURES ===================================
-____ TestDistFacadeProjectNameInline.test_inline_variable_name_is_applied _____
-
-self = <test_inline.TestDistFacadeProjectNameInline testMethod=test_inline_variable_name_is_applied>
-
-    def test_inline_variable_name_is_applied(self):
-        func = DistFacade.project_name.fget
-        self.assertTrue(inspect.isfunction(func))
->       self.assertNotIn("name", func.__code__.co_varnames)
-E       AssertionError: 'name' unexpectedly found in ('self', 'name')
-
-testing\test_inline.py:22: AssertionError
-=========================== short test summary info ===========================
-FAILED testing/test_inline.py::TestDistFacadeProjectNameInline::test_inline_variable_name_is_applied
-======================== 1 failed, 125 passed in 0.70s ========================
+============================= 126 passed in 0.45s =============================
 
 ============================================================
 STDERR:

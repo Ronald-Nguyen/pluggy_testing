@@ -1,3 +1,5 @@
+File `_manager.py`:
+```python
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -407,3 +409,4 @@ class PluginManager:
 
 def _formatdef(func: Callable[..., object]) -> str:
     return f"{func.__name__}{inspect.signature(func)}"
+```

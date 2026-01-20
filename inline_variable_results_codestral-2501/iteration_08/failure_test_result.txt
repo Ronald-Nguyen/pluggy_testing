@@ -1,5 +1,5 @@
-Iteration 3
-Timestamp: 2026-01-20T12:41:45.765236
+Iteration 8
+Timestamp: 2026-01-20T15:22:37.152328
 Success: False
 
 ============================================================
@@ -38,7 +38,7 @@ E       AssertionError: 'name' unexpectedly found in ('self', 'name')
 testing\test_inline.py:22: AssertionError
 =========================== short test summary info ===========================
 FAILED testing/test_inline.py::TestDistFacadeProjectNameInline::test_inline_variable_name_is_applied
-======================== 1 failed, 125 passed in 0.54s ========================
+======================== 1 failed, 125 passed in 0.52s ========================
 
 ============================================================
 STDERR:

@@ -64,8 +64,7 @@ class DistFacade:
 
     @property
     def project_name(self) -> str:
-        name: str = self.metadata["name"]
-        return name
+        return self.metadata["name"]
 
     def __getattr__(self, attr: str, default: Any | None = None) -> Any:
         return getattr(self._dist, attr, default)
