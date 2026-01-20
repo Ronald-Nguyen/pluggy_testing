@@ -1,0 +1,12 @@
+
+Iteration 1 erfolgreich.
+Iteration 2 erfolgreich.
+Iteration 3 erfolgreich.
+Iteration 4 erfolgreich.
+Iteration 5 erfolgreich.
+Iteration 6 erfolgreich.
+Iteration 7 erfolgreich.
+Iteration 8 erfolgreich.
+Iteration 9 erfolgreich.
+Iteration 10 erfolgreich.
+Fertig. Erfolgsrate: 100.0%
