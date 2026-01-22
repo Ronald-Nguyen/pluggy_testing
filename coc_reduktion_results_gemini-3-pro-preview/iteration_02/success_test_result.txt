@@ -1,0 +1,32 @@
+Iteration 2
+Timestamp: 2026-01-22T21:38:56.241014
+Success: True
+
+============================================================
+STDOUT:
+============================= test session starts =============================
+platform win32 -- Python 3.13.5, pytest-9.0.2, pluggy-0.1.dev927+gae3d9d2fb
+rootdir: C:\Users\ronal\pluggy_testing
+configfile: tox.ini
+testpaths: testing
+plugins: anyio-4.12.1, cov-7.0.0
+collected 127 items
+
+testing\test_details.py ..........                                       [  7%]
+testing\test_helpers.py ......                                           [ 12%]
+testing\test_hookcaller.py ......................                        [ 29%]
+testing\test_invocations.py ...............                              [ 41%]
+testing\test_multicall.py ........................                       [ 60%]
+testing\test_pluginmanager.py .........................................  [ 92%]
+testing\test_refactoring.py s.s                                          [ 95%]
+testing\test_result.py .                                                 [ 96%]
+testing\test_tracer.py ....                                              [ 99%]
+testing\test_warnings.py .                                               [100%]
+
+=========================== short test summary info ===========================
+SKIPPED [1] testing\test_refactoring.py:23: Skipping test for inlining variable name
+SKIPPED [1] ..\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\unittest.py:498: only when getter setter refactoring is applied
+======================= 125 passed, 2 skipped in 0.41s ========================
+
+============================================================
+STDERR:

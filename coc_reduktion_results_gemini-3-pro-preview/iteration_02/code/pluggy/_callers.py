@@ -1,0 +1,177 @@
+from __future__ import annotations
+
+from collections.abc import Generator
+from collections.abc import Mapping
+from collections.abc import Sequence
+from typing import cast
+from typing import NoReturn
+from typing import TypeAlias
+import warnings
+
+from ._hooks import HookImpl
+from ._result import HookCallError
+from ._result import Result
+from ._warnings import PluggyTeardownRaisedWarning
+
+
+Teardown: TypeAlias = Generator[None, object, object]
+
+
+def run_old_style_hookwrapper(
+    hook_impl: HookImpl, hook_name: str, args: Sequence[object]
+) -> Teardown:
+    teardown: Teardown = cast(Teardown, hook_impl.function(*args))
+    try:
+        next(teardown)
+    except StopIteration:
+        _raise_wrapfail(teardown, "did not yield")
+    try:
+        res = yield
+        result = Result(res, None)
+    except BaseException as exc:
+        result = Result(None, exc)
+    try:
+        teardown.send(result)
+    except StopIteration:
+        pass
+    except BaseException as e:
+        _warn_teardown_exception(hook_name, hook_impl, e)
+        raise
+    else:
+        _raise_wrapfail(teardown, "has second yield")
+    finally:
+        teardown.close()
+    return result.get_result()
+
+
+def _raise_wrapfail(
+    wrap_controller: Generator[None, object, object],
+    msg: str,
+) -> NoReturn:
+    co = wrap_controller.gi_code
+    raise RuntimeError(
+        f"wrap_controller at {co.co_name!r} {co.co_filename}:{co.co_firstlineno} {msg}"
+    )
+
+
+def _warn_teardown_exception(
+    hook_name: str, hook_impl: HookImpl, e: BaseException
+) -> None:
+    msg = (
+        f"A plugin raised an exception during an old-style hookwrapper teardown.\n"
+        f"Plugin: {hook_impl.plugin_name}, Hook: {hook_name}\n"
+        f"{type(e).__name__}: {e}\n"
+        f"For more information see https://pluggy.readthedocs.io/en/stable/api_reference.html#pluggy.PluggyTeardownRaisedWarning"
+    )
+    warnings.warn(PluggyTeardownRaisedWarning(msg), stacklevel=6)
+
+
+def _multicall(
+    hook_name: str,
+    hook_impls: Sequence[HookImpl],
+    caller_kwargs: Mapping[str, object],
+    firstresult: bool,
+) -> object | list[object]:
+    __tracebackhide__ = True
+    results: list[object] = []
+    exception = None
+    teardowns: list[Teardown] = []
+
+    try:
+        _exec_hook_impls(
+            hook_name, hook_impls, caller_kwargs, firstresult, results, teardowns
+        )
+    except BaseException as exc:
+        exception = exc
+
+    if firstresult:
+        outcome = results[0] if results else None
+    else:
+        outcome = results
+
+    return _process_teardowns(teardowns, outcome, exception)
+
+
+def _exec_hook_impls(
+    hook_name: str,
+    hook_impls: Sequence[HookImpl],
+    caller_kwargs: Mapping[str, object],
+    firstresult: bool,
+    results: list[object],
+    teardowns: list[Teardown],
+) -> None:
+    __tracebackhide__ = True
+    for hook_impl in reversed(hook_impls):
+        args = _make_args(hook_impl, caller_kwargs)
+
+        if hook_impl.hookwrapper:
+            gen = run_old_style_hookwrapper(hook_impl, hook_name, args)
+            next(gen)
+            teardowns.append(gen)
+        elif hook_impl.wrapper:
+            res = hook_impl.function(*args)
+            gen = cast(Generator[None, object, object], res)
+            try:
+                next(gen)
+            except StopIteration:
+                _raise_wrapfail(gen, "did not yield")
+            teardowns.append(gen)
+        else:
+            res = hook_impl.function(*args)
+            if res is not None:
+                results.append(res)
+                if firstresult:
+                    break
+
+
+def _make_args(
+    hook_impl: HookImpl, caller_kwargs: Mapping[str, object]
+) -> list[object]:
+    __tracebackhide__ = True
+    try:
+        return [caller_kwargs[argname] for argname in hook_impl.argnames]
+    except KeyError as e:
+        for argname in hook_impl.argnames:
+            if argname not in caller_kwargs:
+                raise HookCallError(
+                    f"hook call must provide argument {argname!r}"
+                ) from e
+        raise
+
+
+def _process_teardowns(
+    teardowns: list[Teardown], outcome: object, exception: BaseException | None
+) -> object:
+    __tracebackhide__ = True
+    for teardown in reversed(teardowns):
+        try:
+            if exception is not None:
+                if not _teardown_throw(teardown, exception):
+                    continue
+            else:
+                teardown.send(outcome)
+            teardown.close()
+        except StopIteration as si:
+            outcome = si.value
+            exception = None
+            continue
+        except BaseException as e:
+            exception = e
+            continue
+        _raise_wrapfail(teardown, "has second yield")
+
+    if exception is not None:
+        raise exception
+    return outcome
+
+
+def _teardown_throw(teardown: Teardown, exception: BaseException) -> bool:
+    __tracebackhide__ = True
+    try:
+        teardown.throw(exception)
+        return True
+    except RuntimeError as re:
+        if isinstance(exception, StopIteration) and re.__cause__ is exception:
+            teardown.close()
+            return False
+        raise

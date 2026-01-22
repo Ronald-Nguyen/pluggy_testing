@@ -1,0 +1,79 @@
+Iteration 10
+Timestamp: 2026-01-22T22:00:09.633484
+Success: False
+
+============================================================
+STDOUT:
+============================= test session starts =============================
+platform win32 -- Python 3.13.5, pytest-9.0.2, pluggy-0.1.dev927+gae3d9d2fb
+rootdir: C:\Users\ronal\pluggy_testing
+configfile: tox.ini
+testpaths: testing
+plugins: anyio-4.12.1, cov-7.0.0
+collected 127 items
+
+testing\test_details.py ..........                                       [  7%]
+testing\test_helpers.py ......                                           [ 12%]
+testing\test_hookcaller.py ......................                        [ 29%]
+testing\test_invocations.py ...............                              [ 41%]
+testing\test_multicall.py ........................                       [ 60%]
+testing\test_pluginmanager.py .........................................  [ 92%]
+testing\test_refactoring.py s.s                                          [ 95%]
+testing\test_result.py .                                                 [ 96%]
+testing\test_tracer.py ....                                              [ 99%]
+testing\test_warnings.py F                                               [100%]
+
+================================== FAILURES ===================================
+________________________ test_teardown_raised_warning _________________________
+
+pm = <pluggy._manager.PluginManager object at 0x00000189ED723B50>
+
+    def test_teardown_raised_warning(pm: PluginManager) -> None:
+        class Api:
+            @hookspec
+            def my_hook(self):
+                raise NotImplementedError()
+    
+        pm.add_hookspecs(Api)
+    
+        class Plugin1:
+            @hookimpl
+            def my_hook(self):
+                pass
+    
+        class Plugin2:
+            @hookimpl(hookwrapper=True)
+            def my_hook(self):
+                yield
+                1 / 0
+    
+        class Plugin3:
+            @hookimpl(hookwrapper=True)
+            def my_hook(self):
+                yield
+    
+        pm.register(Plugin1(), "plugin1")
+        pm.register(Plugin2(), "plugin2")
+        pm.register(Plugin3(), "plugin3")
+        with pytest.warns(
+            PluggyTeardownRaisedWarning,
+            match=r"\bplugin2\b.*\bmy_hook\b.*\n.*ZeroDivisionError",
+        ) as wc:
+            with pytest.raises(ZeroDivisionError):
+                pm.hook.my_hook()
+        assert len(wc.list) == 1
+>       assert Path(wc.list[0].filename).name == "test_warnings.py"
+E       AssertionError: assert '_hooks.py' == 'test_warnings.py'
+E         
+E         - test_warnings.py
+E         + _hooks.py
+
+testing\test_warnings.py:49: AssertionError
+=========================== short test summary info ===========================
+SKIPPED [1] testing\test_refactoring.py:23: Skipping test for inlining variable name
+SKIPPED [1] ..\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\unittest.py:498: only when getter setter refactoring is applied
+FAILED testing/test_warnings.py::test_teardown_raised_warning - AssertionErro...
+================== 1 failed, 124 passed, 2 skipped in 0.46s ===================
+
+============================================================
+STDERR:
