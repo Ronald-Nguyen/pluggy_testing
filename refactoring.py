@@ -8,7 +8,7 @@ from pathlib import Path
 from datetime import datetime
 from unittest import result
 
-REFACTORING = 'getter_setter' 
+REFACTORING = 'coc_reduktion' 
 PATH = 'src/pluggy'
 ITERATIONS = 10
 GEMINI3 = 'gemini-3-pro-preview'
@@ -23,7 +23,7 @@ MODEL_MISTRAL = CODESTRAL
 GROQ_API_KEY = os.environ.get('GROQ_API_KEY')
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 MISTRAL_API_KEY = os.environ.get('MISTRAL_API_KEY')
-LLM_API_KEY = GEMINI_API_KEY
+LLM_API_KEY = MISTRAL_API_KEY
 client = None
 MODEL = None
 
