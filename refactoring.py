@@ -8,7 +8,7 @@ from pathlib import Path
 from datetime import datetime
 from unittest import result
 
-REFACTORING = 'coc_reduktion' 
+REFACTORING = 'coc_reduktion'
 PATH = 'src/pluggy'
 ITERATIONS = 10
 GEMINI3 = 'gemini-3-pro-preview'
@@ -27,16 +27,7 @@ LLM_API_KEY = MISTRAL_API_KEY
 client = None
 MODEL = None
 
-if LLM_API_KEY == GROQ_API_KEY:
-    from groq import Groq
-    MODEL = MODEL_GROQ
-    try:
-        client = Groq(api_key=LLM_API_KEY)
-        print("Groq API Key aus Umgebungsvariable geladen")
-    except Exception as e:
-        print(f"Fehler beim Laden des API-Keys: {e}")
-        exit(1)
-elif LLM_API_KEY == MISTRAL_API_KEY:
+if LLM_API_KEY == MISTRAL_API_KEY:
     from mistralai import Mistral
     MODEL = MODEL_MISTRAL
     try:
@@ -44,7 +35,7 @@ elif LLM_API_KEY == MISTRAL_API_KEY:
         print("Mistral API Key aus Umgebungsvariable geladen")
     except Exception as e:
         print(f"Fehler beim Laden des API-Keys: {e}")
-        exit(1)
+        exit(1)    
 elif LLM_API_KEY == GEMINI_API_KEY:
     from google import genai
     MODEL = MODEL_GEMINI
@@ -54,6 +45,16 @@ elif LLM_API_KEY == GEMINI_API_KEY:
     except Exception as e:
         print(f"Fehler beim Laden des API-Keys: {e}")
         exit(1)
+elif LLM_API_KEY == GROQ_API_KEY:
+    from groq import Groq
+    MODEL = MODEL_GROQ
+    try:
+        client = Groq(api_key=LLM_API_KEY)
+        print("Groq API Key aus Umgebungsvariable geladen")
+    except Exception as e:
+        print(f"Fehler beim Laden des API-Keys: {e}")
+        exit(1)
+
 
 
 
@@ -269,12 +270,12 @@ def main():
         restore_project(backup_dir, PROJECT_DIR)
 
         try:
-            if LLM_API_KEY == GROQ_API_KEY:
-                response_text = groq_generate(final_prompt)
-            elif LLM_API_KEY == MISTRAL_API_KEY:
+            if LLM_API_KEY == MISTRAL_API_KEY:
                 response_text = mistral_generate(final_prompt)
             elif LLM_API_KEY == GEMINI_API_KEY:
                 response_text = gemini_generate(final_prompt)
+            elif LLM_API_KEY == GROQ_API_KEY:
+                response_text = groq_generate(final_prompt)
             else:
                 response_text = ollama_generate(final_prompt)
 
