@@ -1,0 +1,41 @@
+Iteration 8
+Timestamp: 2026-01-22T14:43:27.699884
+Success: False
+
+============================================================
+STDOUT:
+
+============================================================
+STDERR:
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\ronal\AppData\Local\Programs\Python\Python313\Scripts\pytest.exe\__main__.py", line 6, in <module>
+    sys.exit(console_main())
+             ~~~~~~~~~~~~^^
+  File "C:\Users\ronal\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\config\__init__.py", line 223, in console_main
+    code = main()
+  File "C:\Users\ronal\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\config\__init__.py", line 193, in main
+    config = _prepareconfig(new_args, plugins)
+  File "C:\Users\ronal\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\config\__init__.py", line 361, in _prepareconfig
+    config: Config = pluginmanager.hook.pytest_cmdline_parse(
+                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        pluginmanager=pluginmanager, args=args
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\ronal\pluggy_testing\src\pluggy\_hooks.py", line 341, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ronal\pluggy_testing\src\pluggy\_manager.py", line 85, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ronal\pluggy_testing\src\pluggy\_callers.py", line 97, in _multicall
+    raise exception
+  File "C:\Users\ronal\pluggy_testing\src\pluggy\_callers.py", line 83, in _multicall
+    next(function_gen)
+    ~~~~^^^^^^^^^^^^^^
+  File "C:\Users\ronal\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\helpconfig.py", line 126, in pytest_cmdline_parse
+    if config.option.debug:
+       ^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'option'

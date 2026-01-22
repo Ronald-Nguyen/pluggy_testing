@@ -1,0 +1,199 @@
+Iteration 3
+Timestamp: 2026-01-22T14:41:07.494860
+Success: False
+
+============================================================
+STDOUT:
+============================= test session starts =============================
+platform win32 -- Python 3.13.5, pytest-9.0.2, pluggy-0.1.dev927+gae3d9d2fb
+rootdir: C:\Users\ronal\pluggy_testing
+configfile: tox.ini
+testpaths: testing
+plugins: anyio-4.12.1, cov-7.0.0
+collected 127 items
+
+testing\test_details.py ........F.                                       [  7%]
+testing\test_helpers.py ......                                           [ 12%]
+testing\test_hookcaller.py ......................                        [ 29%]
+testing\test_invocations.py ...............                              [ 41%]
+testing\test_multicall.py ..F.....................                       [ 60%]
+testing\test_pluginmanager.py ..........................F.............F  [ 92%]
+testing\test_refactoring.py s.s                                          [ 95%]
+testing\test_result.py .                                                 [ 96%]
+testing\test_tracer.py ....                                              [ 99%]
+testing\test_warnings.py .                                               [100%]
+
+================================== FAILURES ===================================
+___________________________ test_hook_nonspec_call ____________________________
+
+pm = <pluggy._manager.PluginManager object at 0x000001C212DA32F0>
+
+    def test_hook_nonspec_call(pm: PluginManager) -> None:
+        class Plugin:
+            @hookimpl
+            def a_hook(self, passed: str, missing: int) -> None:
+                pass
+    
+        pm.register(Plugin())
+        with pytest.raises(
+            pluggy.HookCallError, match="hook call must provide argument 'missing'"
+        ):
+>           pm.hook.a_hook(passed="a")
+
+testing\test_details.py:224: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src\pluggy\_hooks.py:378: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <pluggy._manager.PluginManager object at 0x000001C212DA32F0>
+hook_name = 'a_hook'
+methods = [<HookImpl plugin_name='1933050603776', plugin=<test_details.test_hook_nonspec_call.<locals>.Plugin object at 0x000001C212CB6900>>]
+kwargs = {'passed': 'a'}, firstresult = False
+
+    def _hookexec(
+        self,
+        hook_name: str,
+        methods: Sequence[HookImpl],
+        kwargs: Mapping[str, object],
+        firstresult: bool,
+    ) -> object | list[object]:
+>       return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'missing'
+
+src\pluggy\_manager.py:85: KeyError
+____________________________ test_tags_call_error _____________________________
+
+    def test_tags_call_error() -> None:
+        @hookimpl
+        def f(x):
+            return x  # pragma: no cover
+    
+        with pytest.raises(HookCallError):
+>           MC([f], {})
+
+testing\test_multicall.py:60: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+methods = [<function test_tags_call_error.<locals>.f at 0x000001C212E127A0>]
+kwargs = {}, firstresult = False
+
+    def MC(
+        methods: Sequence[Callable[..., object]],
+        kwargs: Mapping[str, object],
+        firstresult: bool = False,
+    ) -> object | list[object]:
+        caller = _multicall
+        hookfuncs = []
+        for method in methods:
+            f = HookImpl(None, "<temp>", method, method.example_impl)  # type: ignore[attr-defined]
+            hookfuncs.append(f)
+>       return caller("foo", hookfuncs, kwargs, firstresult)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'x'
+
+testing\test_multicall.py:28: KeyError
+_________________________ test_call_with_too_few_args _________________________
+
+pm = <pluggy._manager.PluginManager object at 0x000001C212EC26D0>
+
+    def test_call_with_too_few_args(pm: PluginManager) -> None:
+        class Hooks:
+            @hookspec
+            def he_method1(self, arg):
+                pass
+    
+        pm.add_hookspecs(Hooks)
+    
+        class Plugin1:
+            @hookimpl
+            def he_method1(self, arg):
+                0 / 0
+    
+        pm.register(Plugin1())
+        with pytest.raises(ZeroDivisionError):
+            pm.hook.he_method1(arg="works")
+    
+        with pytest.raises(HookCallError):
+            with pytest.warns(UserWarning):
+>               pm.hook.he_method1()
+
+testing\test_pluginmanager.py:445: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src\pluggy\_hooks.py:378: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <pluggy._manager.PluginManager object at 0x000001C212EC26D0>
+hook_name = 'he_method1'
+methods = [<HookImpl plugin_name='1933052921568', plugin=<test_pluginmanager.test_call_with_too_few_args.<locals>.Plugin1 object at 0x000001C212EEC6E0>>]
+kwargs = {}, firstresult = False
+
+    def _hookexec(
+        self,
+        hook_name: str,
+        methods: Sequence[HookImpl],
+        kwargs: Mapping[str, object],
+        firstresult: bool,
+    ) -> object | list[object]:
+>       return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'arg'
+
+src\pluggy\_manager.py:85: KeyError
+_______________________ test_check_pending_nonspec_hook _______________________
+
+pm = <pluggy._manager.PluginManager object at 0x000001C212F093D0>
+
+    def test_check_pending_nonspec_hook(
+        pm: PluginManager,
+    ) -> None:
+        hookimpl = HookimplMarker("example")
+    
+        class Plugin:
+            @hookimpl
+            def a_hook(self, param):
+                pass
+    
+        pm.register(Plugin())
+        with pytest.raises(HookCallError, match="hook call must provide argument 'param'"):
+>           pm.hook.a_hook()
+
+testing\test_pluginmanager.py:811: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src\pluggy\_hooks.py:378: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <pluggy._manager.PluginManager object at 0x000001C212F093D0>
+hook_name = 'a_hook'
+methods = [<HookImpl plugin_name='1933052925600', plugin=<test_pluginmanager.test_check_pending_nonspec_hook.<locals>.Plugin object at 0x000001C212EED6A0>>]
+kwargs = {}, firstresult = False
+
+    def _hookexec(
+        self,
+        hook_name: str,
+        methods: Sequence[HookImpl],
+        kwargs: Mapping[str, object],
+        firstresult: bool,
+    ) -> object | list[object]:
+>       return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'param'
+
+src\pluggy\_manager.py:85: KeyError
+=========================== short test summary info ===========================
+SKIPPED [1] testing\test_refactoring.py:23: Skipping test for inlining variable name
+SKIPPED [1] ..\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\unittest.py:498: only when getter setter refactoring is applied
+FAILED testing/test_details.py::test_hook_nonspec_call - KeyError: 'missing'
+FAILED testing/test_multicall.py::test_tags_call_error - KeyError: 'x'
+FAILED testing/test_pluginmanager.py::test_call_with_too_few_args - KeyError:...
+FAILED testing/test_pluginmanager.py::test_check_pending_nonspec_hook - KeyEr...
+================== 4 failed, 121 passed, 2 skipped in 0.56s ===================
+
+============================================================
+STDERR:

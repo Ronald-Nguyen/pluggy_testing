@@ -1,0 +1,466 @@
+Iteration 2
+Timestamp: 2026-01-22T14:40:51.234926
+Success: False
+
+============================================================
+STDOUT:
+============================= test session starts =============================
+platform win32 -- Python 3.13.5, pytest-9.0.2, pluggy-0.1.dev927+gae3d9d2fb
+rootdir: C:\Users\ronal\pluggy_testing
+configfile: tox.ini
+testpaths: testing
+plugins: anyio-4.12.1, cov-7.0.0
+collected 127 items
+
+testing\test_details.py ........F.                                       [  7%]
+testing\test_helpers.py ......                                           [ 12%]
+testing\test_hookcaller.py ......................                        [ 29%]
+testing\test_invocations.py ...........F...                              [ 41%]
+testing\test_multicall.py .......F.....F.......FF.                       [ 60%]
+testing\test_pluginmanager.py ........................................F  [ 92%]
+testing\test_refactoring.py s.s                                          [ 95%]
+testing\test_result.py .                                                 [ 96%]
+testing\test_tracer.py ....                                              [ 99%]
+testing\test_warnings.py F                                               [100%]
+
+================================== FAILURES ===================================
+___________________________ test_hook_nonspec_call ____________________________
+
+hook_impl = <HookImpl plugin_name='3029133584640', plugin=<test_details.test_hook_nonspec_call.<locals>.Plugin object at 0x000002C1466E6900>>
+caller_kwargs = {'passed': 'a'}
+
+    def _get_args(hook_impl: HookImpl, caller_kwargs: Mapping[str, object]) -> Sequence[object]:
+        try:
+>           return [caller_kwargs[argname] for argname in hook_impl.argnames]
+                    ^^^^^^^^^^^^^^^^^^^^^^
+E           KeyError: 'missing'
+
+src\pluggy\_callers.py:98: KeyError
+
+The above exception was the direct cause of the following exception:
+
+pm = <pluggy._manager.PluginManager object at 0x000002C1467CB2F0>
+
+    def test_hook_nonspec_call(pm: PluginManager) -> None:
+        class Plugin:
+            @hookimpl
+            def a_hook(self, passed: str, missing: int) -> None:
+                pass
+    
+        pm.register(Plugin())
+        with pytest.raises(
+            pluggy.HookCallError, match="hook call must provide argument 'missing'"
+        ):
+>           pm.hook.a_hook(passed="a")
+
+testing\test_details.py:224: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src\pluggy\_hooks.py:378: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src\pluggy\_manager.py:85: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src\pluggy\_callers.py:138: in _finalize_multicall
+    raise exception
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+hook_impl = <HookImpl plugin_name='3029133584640', plugin=<test_details.test_hook_nonspec_call.<locals>.Plugin object at 0x000002C1466E6900>>
+caller_kwargs = {'passed': 'a'}
+
+    def _get_args(hook_impl: HookImpl, caller_kwargs: Mapping[str, object]) -> Sequence[object]:
+        try:
+            return [caller_kwargs[argname] for argname in hook_impl.argnames]
+        except KeyError as e:
+            missing_args = [argname for argname in hook_impl.argnames if argname not in caller_kwargs]
+>           raise HookCallError(f"hook call must provide argument {missing_args!r}") from e
+E           pluggy._result.HookCallError: hook call must provide argument ['missing']
+
+src\pluggy\_callers.py:101: HookCallError
+
+During handling of the above exception, another exception occurred:
+
+pm = <pluggy._manager.PluginManager object at 0x000002C1467CB2F0>
+
+    def test_hook_nonspec_call(pm: PluginManager) -> None:
+        class Plugin:
+            @hookimpl
+            def a_hook(self, passed: str, missing: int) -> None:
+                pass
+    
+        pm.register(Plugin())
+>       with pytest.raises(
+            pluggy.HookCallError, match="hook call must provide argument 'missing'"
+        ):
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: "hook call must provide argument 'missing'"
+E         Actual message: "hook call must provide argument ['missing']"
+
+testing\test_details.py:221: AssertionError
+__________________ test_wrappers_yield_twice_fails[wrapper] ___________________
+
+pm = <pluggy._manager.PluginManager object at 0x000002C1468BF2D0>
+kind = <function HookimplMarker.__call__.<locals>.setattr_hookimpl_opts at 0x000002C14677BD80>
+
+    @pytest.mark.parametrize(
+        "kind",
+        [
+            pytest.param(hookimpl(wrapper=True), id="wrapper"),
+            pytest.param(hookimpl(hookwrapper=True), id="legacy-wrapper"),
+        ],
+    )
+    def test_wrappers_yield_twice_fails(pm: PluginManager, kind: Any) -> None:
+        class Plugin:
+            @kind
+            def wrap(self):
+                yield
+                yield
+    
+        pm.register(Plugin())
+>       with pytest.raises(
+            RuntimeError, match="wrap_controller at 'wrap'.* has second yield"
+        ):
+E       Failed: DID NOT RAISE <class 'RuntimeError'>
+
+testing\test_invocations.py:347: Failed
+___________________________ test_wrapper_two_yields ___________________________
+
+    def test_wrapper_two_yields() -> None:
+        @hookimpl(wrapper=True)
+        def m():
+            yield
+            yield
+    
+>       with pytest.raises(RuntimeError, match="has second yield"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE <class 'RuntimeError'>
+
+testing\test_multicall.py:141: Failed
+_________________________ test_wrapper_too_many_yield _________________________
+
+    def test_wrapper_too_many_yield() -> None:
+        out = []
+    
+        @hookimpl(wrapper=True)
+        def m1():
+            try:
+                yield 1
+                yield 2
+            finally:
+                out.append("cleanup")
+    
+>       with pytest.raises(RuntimeError) as ex:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE <class 'RuntimeError'>
+
+testing\test_multicall.py:239: Failed
+_________________ test_wrapper_stopiteration_passtrough[True] _________________
+
+    @hookimpl(wrapper=True)
+    def wrap():
+        out.append("wrap")
+        try:
+>           yield
+
+testing\test_multicall.py:424: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    @hookimpl
+    def stop():
+        out.append("stop")
+>       raise StopIteration
+E       StopIteration
+
+testing\test_multicall.py:435: StopIteration
+
+The above exception was the direct cause of the following exception:
+
+has_hookwrapper = True
+
+    @pytest.mark.parametrize("has_hookwrapper", [True, False])
+    def test_wrapper_stopiteration_passtrough(has_hookwrapper: bool) -> None:
+        out = []
+    
+        @hookimpl(wrapper=True)
+        def wrap():
+            out.append("wrap")
+            try:
+                yield
+            finally:
+                out.append("wrap done")
+    
+        @hookimpl(wrapper=not has_hookwrapper, hookwrapper=has_hookwrapper)
+        def wrap_path2():
+            yield
+    
+        @hookimpl
+        def stop():
+            out.append("stop")
+            raise StopIteration
+    
+        with pytest.raises(StopIteration):
+            try:
+>               MC([stop, wrap, wrap_path2], {})
+
+testing\test_multicall.py:439: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+testing\test_multicall.py:28: in MC
+    return caller("foo", hookfuncs, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src\pluggy\_callers.py:138: in _finalize_multicall
+    raise exception
+src\pluggy\_callers.py:127: in _finalize_multicall
+    teardown.throw(exception)
+src\pluggy\_callers.py:42: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+src\pluggy\_callers.py:27: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+hook_name = 'foo', results = []
+teardowns = [<generator object run_old_style_hookwrapper at 0x000002C1468B2DF0>, <generator object test_wrapper_stopiteration_passtrough.<locals>.wrap at 0x000002C1468F7C60>]
+exception = RuntimeError('generator raised StopIteration'), firstresult = False
+
+    def _finalize_multicall(
+        hook_name: str,
+        results: list[object],
+        teardowns: list[Teardown],
+        exception: BaseException | None,
+        firstresult: bool,
+    ) -> object | list[object]:
+        if firstresult:
+            result = results[0] if results else None
+        else:
+            result = results
+    
+        for teardown in reversed(teardowns):
+            try:
+                if exception is not None:
+>                   teardown.throw(exception)
+E                   RuntimeError: generator raised StopIteration
+
+src\pluggy\_callers.py:127: RuntimeError
+________________ test_wrapper_stopiteration_passtrough[False] _________________
+
+    @hookimpl(wrapper=True)
+    def wrap():
+        out.append("wrap")
+        try:
+>           yield
+
+testing\test_multicall.py:424: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    @hookimpl
+    def stop():
+        out.append("stop")
+>       raise StopIteration
+E       StopIteration
+
+testing\test_multicall.py:435: StopIteration
+
+The above exception was the direct cause of the following exception:
+
+has_hookwrapper = False
+
+    @pytest.mark.parametrize("has_hookwrapper", [True, False])
+    def test_wrapper_stopiteration_passtrough(has_hookwrapper: bool) -> None:
+        out = []
+    
+        @hookimpl(wrapper=True)
+        def wrap():
+            out.append("wrap")
+            try:
+                yield
+            finally:
+                out.append("wrap done")
+    
+        @hookimpl(wrapper=not has_hookwrapper, hookwrapper=has_hookwrapper)
+        def wrap_path2():
+            yield
+    
+        @hookimpl
+        def stop():
+            out.append("stop")
+            raise StopIteration
+    
+        with pytest.raises(StopIteration):
+            try:
+>               MC([stop, wrap, wrap_path2], {})
+
+testing\test_multicall.py:439: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+testing\test_multicall.py:28: in MC
+    return caller("foo", hookfuncs, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src\pluggy\_callers.py:138: in _finalize_multicall
+    raise exception
+src\pluggy\_callers.py:127: in _finalize_multicall
+    teardown.throw(exception)
+testing\test_multicall.py:430: in wrap_path2
+    yield
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+hook_name = 'foo', results = []
+teardowns = [<generator object test_wrapper_stopiteration_passtrough.<locals>.wrap_path2 at 0x000002C146948880>, <generator object test_wrapper_stopiteration_passtrough.<locals>.wrap at 0x000002C1468F5220>]
+exception = RuntimeError('generator raised StopIteration'), firstresult = False
+
+    def _finalize_multicall(
+        hook_name: str,
+        results: list[object],
+        teardowns: list[Teardown],
+        exception: BaseException | None,
+        firstresult: bool,
+    ) -> object | list[object]:
+        if firstresult:
+            result = results[0] if results else None
+        else:
+            result = results
+    
+        for teardown in reversed(teardowns):
+            try:
+                if exception is not None:
+>                   teardown.throw(exception)
+E                   RuntimeError: generator raised StopIteration
+
+src\pluggy\_callers.py:127: RuntimeError
+_______________________ test_check_pending_nonspec_hook _______________________
+
+hook_impl = <HookImpl plugin_name='3029135395200', plugin=<test_pluginmanager.test_check_pending_nonspec_hook.<locals>.Plugin object at 0x000002C1468A0980>>
+caller_kwargs = {}
+
+    def _get_args(hook_impl: HookImpl, caller_kwargs: Mapping[str, object]) -> Sequence[object]:
+        try:
+>           return [caller_kwargs[argname] for argname in hook_impl.argnames]
+                    ^^^^^^^^^^^^^^^^^^^^^^
+E           KeyError: 'param'
+
+src\pluggy\_callers.py:98: KeyError
+
+The above exception was the direct cause of the following exception:
+
+pm = <pluggy._manager.PluginManager object at 0x000002C1469617D0>
+
+    def test_check_pending_nonspec_hook(
+        pm: PluginManager,
+    ) -> None:
+        hookimpl = HookimplMarker("example")
+    
+        class Plugin:
+            @hookimpl
+            def a_hook(self, param):
+                pass
+    
+        pm.register(Plugin())
+        with pytest.raises(HookCallError, match="hook call must provide argument 'param'"):
+>           pm.hook.a_hook()
+
+testing\test_pluginmanager.py:811: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+src\pluggy\_hooks.py:378: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src\pluggy\_manager.py:85: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src\pluggy\_callers.py:138: in _finalize_multicall
+    raise exception
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+hook_impl = <HookImpl plugin_name='3029135395200', plugin=<test_pluginmanager.test_check_pending_nonspec_hook.<locals>.Plugin object at 0x000002C1468A0980>>
+caller_kwargs = {}
+
+    def _get_args(hook_impl: HookImpl, caller_kwargs: Mapping[str, object]) -> Sequence[object]:
+        try:
+            return [caller_kwargs[argname] for argname in hook_impl.argnames]
+        except KeyError as e:
+            missing_args = [argname for argname in hook_impl.argnames if argname not in caller_kwargs]
+>           raise HookCallError(f"hook call must provide argument {missing_args!r}") from e
+E           pluggy._result.HookCallError: hook call must provide argument ['param']
+
+src\pluggy\_callers.py:101: HookCallError
+
+During handling of the above exception, another exception occurred:
+
+pm = <pluggy._manager.PluginManager object at 0x000002C1469617D0>
+
+    def test_check_pending_nonspec_hook(
+        pm: PluginManager,
+    ) -> None:
+        hookimpl = HookimplMarker("example")
+    
+        class Plugin:
+            @hookimpl
+            def a_hook(self, param):
+                pass
+    
+        pm.register(Plugin())
+>       with pytest.raises(HookCallError, match="hook call must provide argument 'param'"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: "hook call must provide argument 'param'"
+E         Actual message: "hook call must provide argument ['param']"
+
+testing\test_pluginmanager.py:810: AssertionError
+________________________ test_teardown_raised_warning _________________________
+
+pm = <pluggy._manager.PluginManager object at 0x000002C1468E6350>
+
+    def test_teardown_raised_warning(pm: PluginManager) -> None:
+        class Api:
+            @hookspec
+            def my_hook(self):
+                raise NotImplementedError()
+    
+        pm.add_hookspecs(Api)
+    
+        class Plugin1:
+            @hookimpl
+            def my_hook(self):
+                pass
+    
+        class Plugin2:
+            @hookimpl(hookwrapper=True)
+            def my_hook(self):
+                yield
+                1 / 0
+    
+        class Plugin3:
+            @hookimpl(hookwrapper=True)
+            def my_hook(self):
+                yield
+    
+        pm.register(Plugin1(), "plugin1")
+        pm.register(Plugin2(), "plugin2")
+        pm.register(Plugin3(), "plugin3")
+        with pytest.warns(
+            PluggyTeardownRaisedWarning,
+            match=r"\bplugin2\b.*\bmy_hook\b.*\n.*ZeroDivisionError",
+        ) as wc:
+            with pytest.raises(ZeroDivisionError):
+                pm.hook.my_hook()
+        assert len(wc.list) == 1
+>       assert Path(wc.list[0].filename).name == "test_warnings.py"
+E       AssertionError: assert '_hooks.py' == 'test_warnings.py'
+E         
+E         - test_warnings.py
+E         + _hooks.py
+
+testing\test_warnings.py:49: AssertionError
+=========================== short test summary info ===========================
+SKIPPED [1] testing\test_refactoring.py:23: Skipping test for inlining variable name
+SKIPPED [1] ..\AppData\Local\Programs\Python\Python313\Lib\site-packages\_pytest\unittest.py:498: only when getter setter refactoring is applied
+FAILED testing/test_details.py::test_hook_nonspec_call - AssertionError: Rege...
+FAILED testing/test_invocations.py::test_wrappers_yield_twice_fails[wrapper]
+FAILED testing/test_multicall.py::test_wrapper_two_yields - Failed: DID NOT R...
+FAILED testing/test_multicall.py::test_wrapper_too_many_yield - Failed: DID N...
+FAILED testing/test_multicall.py::test_wrapper_stopiteration_passtrough[True]
+FAILED testing/test_multicall.py::test_wrapper_stopiteration_passtrough[False]
+FAILED testing/test_pluginmanager.py::test_check_pending_nonspec_hook - Asser...
+FAILED testing/test_warnings.py::test_teardown_raised_warning - AssertionErro...
+================== 8 failed, 117 passed, 2 skipped in 0.90s ===================
+
+============================================================
+STDERR:

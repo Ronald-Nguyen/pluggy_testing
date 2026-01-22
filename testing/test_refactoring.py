@@ -30,6 +30,7 @@ class TestDistFacadeProjectNameInline(unittest.TestCase):
 
 class TestGetterSetter:
 
+    @unittest.skip("only when getter setter refactoring is applied")
     def test_pluginmanager_project_name_is_property_and_usage_unchanged(self):
         # The class must expose 'project_name' as a property descriptor
         prop = inspect.getattr_static(PluginManager, "project_name")
