@@ -27,13 +27,16 @@ from ._hooks import HookspecOpts
 from ._hooks import normalize_hookimpl_opts
 from ._result import Result
 
+
 if TYPE_CHECKING:
     import importlib.metadata
+
 
 _BeforeTrace: TypeAlias = Callable[[str, Sequence[HookImpl], Mapping[str, Any]], None]
 _AfterTrace: TypeAlias = Callable[
     [Result[Any], str, Sequence[HookImpl], Mapping[str, Any]], None
 ]
+
 
 def _warn_for_function(warning: Warning, function: Callable[..., object]) -> None:
     func = cast(types.FunctionType, function)
@@ -44,10 +47,12 @@ def _warn_for_function(warning: Warning, function: Callable[..., object]) -> Non
         filename=func.__code__.co_filename,
     )
 
+
 class PluginValidationError(Exception):
     def __init__(self, plugin: _Plugin, message: str) -> None:
         super().__init__(message)
         self.plugin = plugin
+
 
 class DistFacade:
     def __init__(self, dist: importlib.metadata.Distribution) -> None:
@@ -63,6 +68,7 @@ class DistFacade:
 
     def __dir__(self) -> list[str]:
         return sorted(dir(self._dist) + ["_dist", "project_name"])
+
 
 class PluginManager:
     def __init__(self, project_name: str) -> None:
@@ -105,19 +111,21 @@ class PluginManager:
 
         for name in dir(plugin):
             hookimpl_opts = self.parse_hookimpl_opts(plugin, name)
-            if hookimpl_opts is not None:
-                normalize_hookimpl_opts(hookimpl_opts)
-                method: _HookImplFunction[object] = getattr(plugin, name)
-                hookimpl = HookImpl(plugin, plugin_name, method, hookimpl_opts)
-                name = hookimpl_opts.get("specname") or name
-                hook: HookCaller | None = getattr(self.hook, name, None)
-                if hook is None:
-                    hook = HookCaller(name, self._hookexec)
-                    setattr(self.hook, name, hook)
-                elif hook.has_spec():
-                    self._verify_hook(hook, hookimpl)
-                    hook._maybe_apply_history(hookimpl)
-                hook._add_hookimpl(hookimpl)
+            if hookimpl_opts is None:
+                continue
+
+            normalize_hookimpl_opts(hookimpl_opts)
+            method: _HookImplFunction[object] = getattr(plugin, name)
+            hookimpl = HookImpl(plugin, plugin_name, method, hookimpl_opts)
+            name = hookimpl_opts.get("specname") or name
+            hook: HookCaller | None = getattr(self.hook, name, None)
+            if hook is None:
+                hook = HookCaller(name, self._hookexec)
+                setattr(self.hook, name, hook)
+            elif hook.has_spec():
+                self._verify_hook(hook, hookimpl)
+                hook._maybe_apply_history(hookimpl)
+            hook._add_hookimpl(hookimpl)
         return plugin_name
 
     def parse_hookimpl_opts(self, plugin: _Plugin, name: str) -> HookimplOpts | None:
@@ -369,6 +377,7 @@ class PluginManager:
         if plugins_to_remove:
             return _SubsetHookCaller(orig, plugins_to_remove)
         return orig
+
 
 def _formatdef(func: Callable[..., object]) -> str:
     return f"{func.__name__}{inspect.signature(func)}"

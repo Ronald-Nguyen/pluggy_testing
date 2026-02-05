@@ -27,13 +27,16 @@ from ._hooks import HookspecOpts
 from ._hooks import normalize_hookimpl_opts
 from ._result import Result
 
+
 if TYPE_CHECKING:
     import importlib.metadata
+
 
 _BeforeTrace: TypeAlias = Callable[[str, Sequence[HookImpl], Mapping[str, Any]], None]
 _AfterTrace: TypeAlias = Callable[
     [Result[Any], str, Sequence[HookImpl], Mapping[str, Any]], None
 ]
+
 
 def _warn_for_function(warning: Warning, function: Callable[..., object]) -> None:
     func = cast(types.FunctionType, function)
@@ -44,10 +47,12 @@ def _warn_for_function(warning: Warning, function: Callable[..., object]) -> Non
         filename=func.__code__.co_filename,
     )
 
+
 class PluginValidationError(Exception):
     def __init__(self, plugin: _Plugin, message: str) -> None:
         super().__init__(message)
         self.plugin = plugin
+
 
 class DistFacade:
     def __init__(self, dist: importlib.metadata.Distribution) -> None:
@@ -63,6 +68,7 @@ class DistFacade:
 
     def __dir__(self) -> list[str]:
         return sorted(dir(self._dist) + ["_dist", "project_name"])
+
 
 class PluginManager:
     def __init__(self, project_name: str) -> None:
@@ -272,13 +278,15 @@ class PluginManager:
             if name[0] == "_":
                 continue
             hook: HookCaller = getattr(self.hook, name)
-            if not hook.has_spec():
-                for hookimpl in hook.get_hookimpls():
-                    if not hookimpl.optionalhook:
-                        raise PluginValidationError(
-                            hookimpl.plugin,
-                            f"unknown hook {name!r} in plugin {hookimpl.plugin!r}",
-                        )
+            if hook.has_spec():
+                continue
+
+            for hookimpl in hook.get_hookimpls():
+                if not hookimpl.optionalhook:
+                    raise PluginValidationError(
+                        hookimpl.plugin,
+                        f"unknown hook {name!r} in plugin {hookimpl.plugin!r}",
+                    )
 
     def load_setuptools_entrypoints(self, group: str, name: str | None = None) -> int:
         import importlib.metadata
@@ -369,6 +377,7 @@ class PluginManager:
         if plugins_to_remove:
             return _SubsetHookCaller(orig, plugins_to_remove)
         return orig
+
 
 def _formatdef(func: Callable[..., object]) -> str:
     return f"{func.__name__}{inspect.signature(func)}"

@@ -1,3 +1,5 @@
+File `_manager.py`:
+```python
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -27,13 +29,16 @@ from ._hooks import HookspecOpts
 from ._hooks import normalize_hookimpl_opts
 from ._result import Result
 
+
 if TYPE_CHECKING:
     import importlib.metadata
+
 
 _BeforeTrace: TypeAlias = Callable[[str, Sequence[HookImpl], Mapping[str, Any]], None]
 _AfterTrace: TypeAlias = Callable[
     [Result[Any], str, Sequence[HookImpl], Mapping[str, Any]], None
 ]
+
 
 def _warn_for_function(warning: Warning, function: Callable[..., object]) -> None:
     func = cast(types.FunctionType, function)
@@ -44,12 +49,18 @@ def _warn_for_function(warning: Warning, function: Callable[..., object]) -> Non
         filename=func.__code__.co_filename,
     )
 
+
 class PluginValidationError(Exception):
+
+
     def __init__(self, plugin: _Plugin, message: str) -> None:
         super().__init__(message)
         self.plugin = plugin
 
+
 class DistFacade:
+
+
     def __init__(self, dist: importlib.metadata.Distribution) -> None:
         self._dist = dist
 
@@ -64,7 +75,10 @@ class DistFacade:
     def __dir__(self) -> list[str]:
         return sorted(dir(self._dist) + ["_dist", "project_name"])
 
+
 class PluginManager:
+
+
     def __init__(self, project_name: str) -> None:
         self.project_name: Final = project_name
         self._name2plugin: Final[dict[str, _Plugin]] = {}
@@ -85,6 +99,7 @@ class PluginManager:
         return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
 
     def register(self, plugin: _Plugin, name: str | None = None) -> str | None:
+
         plugin_name = name or self.get_canonical_name(plugin)
 
         if plugin_name in self._name2plugin:
@@ -105,22 +120,25 @@ class PluginManager:
 
         for name in dir(plugin):
             hookimpl_opts = self.parse_hookimpl_opts(plugin, name)
-            if hookimpl_opts is not None:
-                normalize_hookimpl_opts(hookimpl_opts)
-                method: _HookImplFunction[object] = getattr(plugin, name)
-                hookimpl = HookImpl(plugin, plugin_name, method, hookimpl_opts)
-                name = hookimpl_opts.get("specname") or name
-                hook: HookCaller | None = getattr(self.hook, name, None)
-                if hook is None:
-                    hook = HookCaller(name, self._hookexec)
-                    setattr(self.hook, name, hook)
-                elif hook.has_spec():
-                    self._verify_hook(hook, hookimpl)
-                    hook._maybe_apply_history(hookimpl)
-                hook._add_hookimpl(hookimpl)
+            if hookimpl_opts is None:
+                continue
+
+            normalize_hookimpl_opts(hookimpl_opts)
+            method: _HookImplFunction[object] = getattr(plugin, name)
+            hookimpl = HookImpl(plugin, plugin_name, method, hookimpl_opts)
+            name = hookimpl_opts.get("specname") or name
+            hook: HookCaller | None = getattr(self.hook, name, None)
+            if hook is None:
+                hook = HookCaller(name, self._hookexec)
+                setattr(self.hook, name, hook)
+            elif hook.has_spec():
+                self._verify_hook(hook, hookimpl)
+                hook._maybe_apply_history(hookimpl)
+            hook._add_hookimpl(hookimpl)
         return plugin_name
 
     def parse_hookimpl_opts(self, plugin: _Plugin, name: str) -> HookimplOpts | None:
+
         method: object = getattr(plugin, name)
         if not inspect.isroutine(method):
             return None
@@ -137,6 +155,7 @@ class PluginManager:
     def unregister(
         self, plugin: _Plugin | None = None, name: str | None = None
     ) -> Any | None:
+
         if name is None:
             assert plugin is not None, "one of name or plugin needs to be specified"
             name = self.get_name(plugin)
@@ -159,19 +178,23 @@ class PluginManager:
         return plugin
 
     def set_blocked(self, name: str) -> None:
+
         self.unregister(name=name)
         self._name2plugin[name] = None
 
     def is_blocked(self, name: str) -> bool:
+
         return name in self._name2plugin and self._name2plugin[name] is None
 
     def unblock(self, name: str) -> bool:
+
         if self._name2plugin.get(name, -1) is None:
             del self._name2plugin[name]
             return True
         return False
 
     def add_hookspecs(self, module_or_class: _Namespace) -> None:
+
         names = []
         for name in dir(module_or_class):
             spec_opts = self.parse_hookspec_opts(module_or_class, name)
@@ -194,27 +217,34 @@ class PluginManager:
     def parse_hookspec_opts(
         self, module_or_class: _Namespace, name: str
     ) -> HookspecOpts | None:
+
         method = getattr(module_or_class, name)
         opts: HookspecOpts | None = getattr(method, self.project_name + "_spec", None)
         return opts
 
     def get_plugins(self) -> set[Any]:
+
         return {x for x in self._name2plugin.values() if x is not None}
 
     def is_registered(self, plugin: _Plugin) -> bool:
+
         return any(plugin == val for val in self._name2plugin.values())
 
     def get_canonical_name(self, plugin: _Plugin) -> str:
+
         name: str | None = getattr(plugin, "__name__", None)
         return name or str(id(plugin))
 
     def get_plugin(self, name: str) -> Any | None:
+
         return self._name2plugin.get(name)
 
     def has_plugin(self, name: str) -> bool:
+
         return self.get_plugin(name) is not None
 
     def get_name(self, plugin: _Plugin) -> str | None:
+
         for name, val in self._name2plugin.items():
             if plugin == val:
                 return name
@@ -268,19 +298,23 @@ class PluginManager:
             )
 
     def check_pending(self) -> None:
+
         for name in self.hook.__dict__:
             if name[0] == "_":
                 continue
             hook: HookCaller = getattr(self.hook, name)
-            if not hook.has_spec():
-                for hookimpl in hook.get_hookimpls():
-                    if not hookimpl.optionalhook:
-                        raise PluginValidationError(
-                            hookimpl.plugin,
-                            f"unknown hook {name!r} in plugin {hookimpl.plugin!r}",
-                        )
+            if hook.has_spec():
+                continue
+            for hookimpl in hook.get_hookimpls():
+                if hookimpl.optionalhook:
+                    continue
+                raise PluginValidationError(
+                    hookimpl.plugin,
+                    f"unknown hook {name!r} in plugin {hookimpl.plugin!r}",
+                )
 
     def load_setuptools_entrypoints(self, group: str, name: str | None = None) -> int:
+
         import importlib.metadata
 
         count = 0
@@ -300,12 +334,15 @@ class PluginManager:
         return count
 
     def list_plugin_distinfo(self) -> list[tuple[_Plugin, DistFacade]]:
+
         return list(self._plugin_distinfo)
 
     def list_name_plugin(self) -> list[tuple[str, _Plugin]]:
+
         return list(self._name2plugin.items())
 
     def get_hookcallers(self, plugin: _Plugin) -> list[HookCaller] | None:
+
         if self.get_name(plugin) is None:
             return None
         hookcallers = []
@@ -318,6 +355,7 @@ class PluginManager:
     def add_hookcall_monitoring(
         self, before: _BeforeTrace, after: _AfterTrace
     ) -> Callable[[], None]:
+
         oldcall = self._inner_hookexec
 
         def traced_hookexec(
@@ -341,6 +379,7 @@ class PluginManager:
         return undo
 
     def enable_tracing(self) -> Callable[[], None]:
+
         hooktrace = self.trace.root.get("hook")
 
         def before(
@@ -364,11 +403,14 @@ class PluginManager:
     def subset_hook_caller(
         self, name: str, remove_plugins: Iterable[_Plugin]
     ) -> HookCaller:
+
         orig: HookCaller = getattr(self.hook, name)
         plugins_to_remove = {plug for plug in remove_plugins if hasattr(plug, name)}
         if plugins_to_remove:
             return _SubsetHookCaller(orig, plugins_to_remove)
         return orig
 
+
 def _formatdef(func: Callable[..., object]) -> str:
     return f"{func.__name__}{inspect.signature(func)}"
+```
