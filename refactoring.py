@@ -10,7 +10,7 @@ from unittest import result
 
 REFACTORING = 'strategy_pattern'
 PATH = 'src/pluggy'
-ITERATIONS = 3
+ITERATIONS = 10
 GEMINI3 = 'gemini-3-pro-preview'
 GEMINI2 = 'gemini-2.5-flash'
 LLAMA = 'llama-3.3-70b-versatile'
@@ -23,7 +23,7 @@ MODEL_MISTRAL = CODESTRAL
 GROQ_API_KEY = os.environ.get('GROQ_API_KEY')
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 MISTRAL_API_KEY = os.environ.get('MISTRAL_API_KEY')
-LLM_API_KEY = MISTRAL_API_KEY
+LLM_API_KEY = GEMINI_API_KEY
 client = None
 MODEL = None
 
