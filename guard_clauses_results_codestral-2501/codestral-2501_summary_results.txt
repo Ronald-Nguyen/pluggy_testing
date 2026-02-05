@@ -1,0 +1,11 @@
+Iteration 1 erfolgreich. Tokens: prompt=10436, completion=4378, total=14814
+Iteration 2 erfolgreich. Tokens: prompt=10436, completion=4394, total=14830
+Iteration 3 erfolgreich. Tokens: prompt=10436, completion=4372, total=14808
+Iteration 4 erfolgreich. Tokens: prompt=10436, completion=8097, total=18533
+Iteration 5 erfolgreich. Tokens: prompt=10436, completion=4380, total=14816
+Iteration 6 erfolgreich. Tokens: prompt=10436, completion=8094, total=18530
+Iteration 7 erfolgreich. Tokens: prompt=10436, completion=4394, total=14830
+Iteration 8 erfolgreich. Tokens: prompt=10436, completion=8094, total=18530
+Iteration 9 erfolgreich. Tokens: prompt=10436, completion=4374, total=14810
+Iteration 10 erfolgreich. Tokens: prompt=10436, completion=4490, total=14926
+Fertig. Erfolgsrate: 100%
