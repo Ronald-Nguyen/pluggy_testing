@@ -1,0 +1,179 @@
+Iteration 5
+Timestamp: 2026-02-05T19:16:20.485050
+Success: False
+
+============================================================
+STDOUT:
+============================= test session starts =============================
+platform win32 -- Python 3.14.2, pytest-9.0.2, pluggy-0.1.dev918+gfc4045693
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\Users\ronal\pluggy_testing
+configfile: tox.ini
+testpaths: testing
+plugins: anyio-4.12.1, hypothesis-6.148.8, benchmark-5.2.3, cov-7.0.0
+collected 136 items
+
+testing\test_details.py 
+INTERNALERROR> Traceback (most recent call last):
+INTERNALERROR>   File "C:\Users\ronal\AppData\Local\Programs\Python\Python314\Lib\site-packages\_pytest\main.py", line 318, in wrap_session
+INTERNALERROR>     session.exitstatus = doit(config, session) or 0
+INTERNALERROR>                          ~~~~^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "C:\Users\ronal\AppData\Local\Programs\Python\Python314\Lib\site-packages\_pytest\main.py", line 372, in _main
+INTERNALERROR>     config.hook.pytest_runtestloop(session=session)
+INTERNALERROR>     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "C:\Users\ronal\pluggy_testing\src\pluggy\_hooks.py", line 378, in __call__
+INTERNALERROR>     return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+INTERNALERROR>            ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "C:\Users\ronal\pluggy_testing\src\pluggy\_manager.py", line 97, in _hookexec
+INTERNALERROR>     return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+INTERNALERROR>            ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "C:\Users\ronal\pluggy_testing\src\pluggy\_callers.py", line 154, in _multicall
+INTERNALERROR>     raise exception
+INTERNALERROR>   File "C:\Users\ronal\pluggy_testing\src\pluggy\_callers.py", line 131, in _multicall
+INTERNALERROR>     teardown.throw(exception)
+INTERNALERROR>     ~~~~~~~~~~~~~~^^^^^^^^^^^
+INTERNALERROR>   File "C:\Users\ronal\AppData\Local\Programs\Python\Python314\Lib\site-packages\_pytest\logging.py", line 801, in pytest_runtestloop
+INTERNALERROR>     return (yield)  # Run all the tests.
+INTERNALERROR>             ^^^^^
+INTERNALERROR>   File "C:\Users\ronal\pluggy_testing\src\pluggy\_callers.py", line 131, in _multicall
+INTERNALERROR>     teardown.throw(exception)
+INTERNALERROR>     ~~~~~~~~~~~~~~^^^^^^^^^^^
+INTERNALERROR>   File "C:\Users\ronal\AppData\Local\Programs\Python\Python314\Lib\site-packages\_pytest\terminal.py", line 707, in pytest_runtestloop
+INTERNALERROR>     result = yield
+INTERNALERROR>              ^^^^^
+INTERNALERROR>   File "C:\Users\ronal\pluggy_testing\src\pluggy\_callers.py", line 116, in _multicall
+INTERNALERROR>     STRATEGIES["regular"](hook_impl, args, results)
+INTERNALERROR>     ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "C:\Users\ronal\pluggy_testing\src\pluggy\_callers.py", line 52, in _strategy_regular
+INTERNALERROR>     res = hook_impl.function(*args)
+INTERNALERROR>   File "C:\Users\ronal\AppData\Local\Programs\Python\Python314\Lib\site-packages\_pytest\main.py", line 396, in pytest_runtestloop
+INTERNALERROR>     item.config.hook.pytest_runtest_protocol(item=item, nextitem=nextitem)
+INTERNALERROR>     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "C:\Users\ronal\pluggy_testing\src\pluggy\_hooks.py", line 378, in __call__
+INTERNALERROR>     return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+INTERNALERROR>            ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "C:\Users\ronal\pluggy_testing\src\pluggy\_manager.py", line 97, in _hookexec
+INTERNALERROR>     return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+INTERNALERROR>            ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "C:\Users\ronal\pluggy_testing\src\pluggy\_callers.py", line 154, in _multicall
+INTERNALERROR>     raise exception
+INTERNALERROR>   File "C:\Users\ronal\pluggy_testing\src\pluggy\_callers.py", line 131, in _multicall
+INTERNALERROR>     teardown.throw(exception)
+INTERNALERROR>     ~~~~~~~~~~~~~~^^^^^^^^^^^
+INTERNALERROR>   File "C:\Users\ronal\AppData\Local\Programs\Python\Python314\Lib\site-packages\_pytest\warnings.py", line 89, in pytest_runtest_protocol
+INTERNALERROR>     return (yield)
+INTERNALERROR>             ^^^^^
+INTERNALERROR>   File "C:\Users\ronal\pluggy_testing\src\pluggy\_callers.py", line 131, in _multicall
+INTERNALERROR>     teardown.throw(exception)
+INTERNALERROR>     ~~~~~~~~~~~~~~^^^^^^^^^^^
+INTERNALERROR>   File "C:\Users\ronal\AppData\Local\Programs\Python\Python314\Lib\site-packages\_pytest\assertion\__init__.py", line 192, in pytest_runtest_protocol
+INTERNALERROR>     return (yield)
+INTERNALERROR>             ^^^^^
+INTERNALERROR>   File "C:\Users\ronal\pluggy_testing\src\pluggy\_callers.py", line 131, in _multicall
+INTERNALERROR>     teardown.throw(exception)
+INTERNALERROR>     ~~~~~~~~~~~~~~^^^^^^^^^^^
+INTERNALERROR>   File "C:\Users\ronal\AppData\Local\Programs\Python\Python314\Lib\site-packages\_pytest\unittest.py", line 587, in pytest_runtest_protocol
+INTERNALERROR>     return (yield)
+INTERNALERROR>             ^^^^^
+INTERNALERROR>   File "C:\Users\ronal\pluggy_testing\src\pluggy\_callers.py", line 131, in _multicall
+INTERNALERROR>     teardown.throw(exception)
+INTERNALERROR>     ~~~~~~~~~~~~~~^^^^^^^^^^^
+INTERNALERROR>   File "C:\Users\ronal\AppData\Local\Programs\Python\Python314\Lib\site-packages\_pytest\faulthandler.py", line 102, in pytest_runtest_protocol
+INTERNALERROR>     return (yield)
+INTERNALERROR>             ^^^^^
+INTERNALERROR>   File "C:\Users\ronal\pluggy_testing\src\pluggy\_callers.py", line 116, in _multicall
+INTERNALERROR>     STRATEGIES["regular"](hook_impl, args, results)
+INTERNALERROR>     ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "C:\Users\ronal\pluggy_testing\src\pluggy\_callers.py", line 52, in _strategy_regular
+INTERNALERROR>     res = hook_impl.function(*args)
+INTERNALERROR>   File "C:\Users\ronal\AppData\Local\Programs\Python\Python314\Lib\site-packages\_pytest\runner.py", line 118, in pytest_runtest_protocol
+INTERNALERROR>     runtestprotocol(item, nextitem=nextitem)
+INTERNALERROR>     ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "C:\Users\ronal\AppData\Local\Programs\Python\Python314\Lib\site-packages\_pytest\runner.py", line 131, in runtestprotocol
+INTERNALERROR>     rep = call_and_report(item, "setup", log)
+INTERNALERROR>   File "C:\Users\ronal\AppData\Local\Programs\Python\Python314\Lib\site-packages\_pytest\runner.py", line 249, in call_and_report
+INTERNALERROR>     report: TestReport = ihook.pytest_runtest_makereport(item=item, call=call)
+INTERNALERROR>                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "C:\Users\ronal\pluggy_testing\src\pluggy\_hooks.py", line 378, in __call__
+INTERNALERROR>     return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+INTERNALERROR>            ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "C:\Users\ronal\pluggy_testing\src\pluggy\_manager.py", line 97, in _hookexec
+INTERNALERROR>     return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+INTERNALERROR>            ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+INTERNALERROR>   File "C:\Users\ronal\pluggy_testing\src\pluggy\_callers.py", line 154, in _multicall
+INTERNALERROR>     raise exception
+INTERNALERROR>   File "C:\Users\ronal\pluggy_testing\src\pluggy\_callers.py", line 131, in _multicall
+INTERNALERROR>     teardown.throw(exception)
+INTERNALERROR>     ~~~~~~~~~~~~~~^^^^^^^^^^^
+INTERNALERROR>   File "C:\Users\ronal\AppData\Local\Programs\Python\Python314\Lib\site-packages\_pytest\tmpdir.py", line 311, in pytest_runtest_makereport
+INTERNALERROR>     rep = yield
+INTERNALERROR>           ^^^^^
+INTERNALERROR>   File "C:\Users\ronal\pluggy_testing\src\pluggy\_callers.py", line 131, in _multicall
+INTERNALERROR>     teardown.throw(exception)
+INTERNALERROR>     ~~~~~~~~~~~~~~^^^^^^^^^^^
+INTERNALERROR>   File "C:\Users\ronal\pluggy_testing\src\pluggy\_callers.py", line 18, in _strategy_hookwrapper
+INTERNALERROR>     def _strategy_hookwrapper(hook_impl: HookImpl, hook_name: str, args: Sequence[object]) -> Teardown:
+INTERNALERROR>   File "C:\Users\ronal\pluggy_testing\src\pluggy\_callers.py", line 142, in _multicall
+INTERNALERROR>     teardown.send(result)
+INTERNALERROR>     ~~~~~~~~~~~~~^^^^^^^^
+INTERNALERROR> TypeError: can't send non-None value to a just-started generator
+
+============================================================
+STDERR:
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\ronal\AppData\Local\Programs\Python\Python314\Scripts\pytest.exe\__main__.py", line 6, in <module>
+    sys.exit(console_main())
+             ~~~~~~~~~~~~^^
+  File "C:\Users\ronal\AppData\Local\Programs\Python\Python314\Lib\site-packages\_pytest\config\__init__.py", line 223, in console_main
+    code = main()
+  File "C:\Users\ronal\AppData\Local\Programs\Python\Python314\Lib\site-packages\_pytest\config\__init__.py", line 199, in main
+    ret: ExitCode | int = config.hook.pytest_cmdline_main(config=config)
+                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\ronal\pluggy_testing\src\pluggy\_hooks.py", line 378, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ronal\pluggy_testing\src\pluggy\_manager.py", line 97, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ronal\pluggy_testing\src\pluggy\_callers.py", line 154, in _multicall
+    raise exception
+  File "C:\Users\ronal\pluggy_testing\src\pluggy\_callers.py", line 116, in _multicall
+    STRATEGIES["regular"](hook_impl, args, results)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ronal\pluggy_testing\src\pluggy\_callers.py", line 52, in _strategy_regular
+    res = hook_impl.function(*args)
+  File "C:\Users\ronal\AppData\Local\Programs\Python\Python314\Lib\site-packages\_pytest\main.py", line 365, in pytest_cmdline_main
+    return wrap_session(config, _main)
+  File "C:\Users\ronal\AppData\Local\Programs\Python\Python314\Lib\site-packages\_pytest\main.py", line 353, in wrap_session
+    config.hook.pytest_sessionfinish(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        session=session, exitstatus=session.exitstatus
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\ronal\pluggy_testing\src\pluggy\_hooks.py", line 378, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ronal\pluggy_testing\src\pluggy\_manager.py", line 97, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ronal\pluggy_testing\src\pluggy\_callers.py", line 154, in _multicall
+    raise exception
+  File "C:\Users\ronal\pluggy_testing\src\pluggy\_callers.py", line 131, in _multicall
+    teardown.throw(exception)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\ronal\AppData\Local\Programs\Python\Python314\Lib\site-packages\_pytest\logging.py", line 873, in pytest_sessionfinish
+    return (yield)
+            ^^^^^
+  File "C:\Users\ronal\pluggy_testing\src\pluggy\_callers.py", line 131, in _multicall
+    teardown.throw(exception)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\ronal\AppData\Local\Programs\Python\Python314\Lib\site-packages\_pytest\terminal.py", line 960, in pytest_sessionfinish
+    result = yield
+             ^^^^^
+  File "C:\Users\ronal\pluggy_testing\src\pluggy\_callers.py", line 142, in _multicall
+    teardown.send(result)
+    ~~~~~~~~~~~~~^^^^^^^^
+TypeError: can't send non-None value to a just-started generator

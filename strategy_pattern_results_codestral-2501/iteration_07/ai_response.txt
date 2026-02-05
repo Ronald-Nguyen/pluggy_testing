@@ -1,3 +1,7 @@
+I'll refactor the `_multicall` function in `_callers.py` to use the Strategy pattern. Here's the updated file:
+
+File `_callers.py`:
+```python
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -13,15 +17,11 @@ from ._result import HookCallError
 from ._result import Result
 from ._warnings import PluggyTeardownRaisedWarning
 
-
 Teardown: TypeAlias = Generator[None, object, object]
-
 
 def run_old_style_hookwrapper(
     hook_impl: HookImpl, hook_name: str, args: Sequence[object]
 ) -> Teardown:
-
-
     teardown: Teardown = cast(Teardown, hook_impl.function(*args))
     try:
         next(teardown)
@@ -45,7 +45,6 @@ def run_old_style_hookwrapper(
         teardown.close()
     return result.get_result()
 
-
 def _raise_wrapfail(
     wrap_controller: Generator[None, object, object],
     msg: str,
@@ -54,7 +53,6 @@ def _raise_wrapfail(
     raise RuntimeError(
         f"wrap_controller at {co.co_name!r} {co.co_filename}:{co.co_firstlineno} {msg}"
     )
-
 
 def _warn_teardown_exception(
     hook_name: str, hook_impl: HookImpl, e: BaseException
@@ -67,20 +65,32 @@ def _warn_teardown_exception(
     )
     warnings.warn(PluggyTeardownRaisedWarning(msg), stacklevel=6)
 
+def _strategy_hookwrapper(hook_impl: HookImpl, hook_name: str, args: Sequence[object], teardowns: list[Teardown]) -> None:
+    function_gen = run_old_style_hookwrapper(hook_impl, hook_name, args)
+    next(function_gen)
+    teardowns.append(function_gen)
 
-def _get_call_args(
-    hook_impl: HookImpl, caller_kwargs: Mapping[str, object]
-) -> list[object]:
+def _strategy_wrapper(hook_impl: HookImpl, hook_name: str, args: Sequence[object], teardowns: list[Teardown]) -> None:
     try:
-        return [caller_kwargs[argname] for argname in hook_impl.argnames]
-    except KeyError as e:
-        for argname in hook_impl.argnames:
-            if argname not in caller_kwargs:
-                raise HookCallError(
-                    f"hook call must provide argument {argname!r}"
-                ) from e
-        raise
+        res = hook_impl.function(*args)
+        function_gen = cast(Generator[None, object, object], res)
+        next(function_gen)
+        teardowns.append(function_gen)
+    except StopIteration:
+        _raise_wrapfail(function_gen, "did not yield")
 
+def _strategy_regular(hook_impl: HookImpl, hook_name: str, args: Sequence[object], results: list[object], firstresult: bool) -> None:
+    res = hook_impl.function(*args)
+    if res is not None:
+        results.append(res)
+        if firstresult:
+            raise StopIteration()
+
+STRATEGY_MAP = {
+    'hookwrapper': _strategy_hookwrapper,
+    'wrapper': _strategy_wrapper,
+    'regular': _strategy_regular
+}
 
 def _multicall(
     hook_name: str,
@@ -88,7 +98,6 @@ def _multicall(
     caller_kwargs: Mapping[str, object],
     firstresult: bool,
 ) -> object | list[object]:
-
     __tracebackhide__ = True
     results: list[object] = []
     exception = None
@@ -96,28 +105,20 @@ def _multicall(
         teardowns: list[Teardown] = []
         try:
             for hook_impl in reversed(hook_impls):
-                args = _get_call_args(hook_impl, caller_kwargs)
+                try:
+                    args = [caller_kwargs[argname] for argname in hook_impl.argnames]
+                except KeyError as e:
+                    for argname in hook_impl.argnames:
+                        if argname not in caller_kwargs:
+                            raise HookCallError(
+                                f"hook call must provide argument {argname!r}"
+                            ) from e
 
-                if hook_impl.hookwrapper:
-                    function_gen = run_old_style_hookwrapper(hook_impl, hook_name, args)
-
-                    next(function_gen)
-                    teardowns.append(function_gen)
-
-                elif hook_impl.wrapper:
-                    try:
-                        res = hook_impl.function(*args)
-                        function_gen = cast(Generator[None, object, object], res)
-                        next(function_gen)
-                        teardowns.append(function_gen)
-                    except StopIteration:
-                        _raise_wrapfail(function_gen, "did not yield")
-                else:
-                    res = hook_impl.function(*args)
-                    if res is not None:
-                        results.append(res)
-                        if firstresult:
-                            break
+                strategy_key = 'hookwrapper' if hook_impl.hookwrapper else 'wrapper' if hook_impl.wrapper else 'regular'
+                try:
+                    STRATEGY_MAP[strategy_key](hook_impl, hook_name, args, teardowns, results, firstresult)
+                except StopIteration:
+                    break
         except BaseException as exc:
             exception = exc
     finally:
@@ -156,3 +157,4 @@ def _multicall(
         raise exception
     else:
         return result
+```

@@ -10,7 +10,7 @@ from unittest import result
 
 REFACTORING = 'strategy_pattern'
 PATH = 'src/pluggy'
-ITERATIONS = 2
+ITERATIONS = 3
 GEMINI3 = 'gemini-3-pro-preview'
 GEMINI2 = 'gemini-2.5-flash'
 LLAMA = 'llama-3.3-70b-versatile'

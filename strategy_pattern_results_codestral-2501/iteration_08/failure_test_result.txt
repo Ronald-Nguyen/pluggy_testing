@@ -1,0 +1,96 @@
+Iteration 1
+Timestamp: 2026-02-05T19:21:27.143837
+Success: False
+
+============================================================
+STDOUT:
+============================= test session starts =============================
+platform win32 -- Python 3.14.2, pytest-9.0.2, pluggy-0.1.dev918+gfc4045693
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\Users\ronal\pluggy_testing
+configfile: tox.ini
+testpaths: testing
+plugins: anyio-4.12.1, hypothesis-6.148.8, benchmark-5.2.3, cov-7.0.0
+collected 136 items
+
+testing\test_details.py ..........                                       [  7%]
+testing\test_helpers.py ......                                           [ 11%]
+testing\test_hookcaller.py ......................                        [ 27%]
+testing\test_invocations.py ...............                              [ 38%]
+testing\test_multicall.py .....................FF.                       [ 56%]
+testing\test_pluginmanager.py .........................................  [ 86%]
+testing\test_refactoring.py s.s.........                                 [ 95%]
+testing\test_result.py .                                                 [ 96%]
+testing\test_tracer.py ....                                              [ 99%]
+testing\test_warnings.py .                                               [100%]
+
+================================== FAILURES ===================================
+_________________ test_wrapper_stopiteration_passtrough[True] _________________
+
+has_hookwrapper = True
+
+    @pytest.mark.parametrize("has_hookwrapper", [True, False])
+    def test_wrapper_stopiteration_passtrough(has_hookwrapper: bool) -> None:
+        out = []
+    
+        @hookimpl(wrapper=True)
+        def wrap():
+            out.append("wrap")
+            try:
+                yield
+            finally:
+                out.append("wrap done")
+    
+        @hookimpl(wrapper=not has_hookwrapper, hookwrapper=has_hookwrapper)
+        def wrap_path2():
+            yield
+    
+        @hookimpl
+        def stop():
+            out.append("stop")
+            raise StopIteration
+    
+>       with pytest.raises(StopIteration):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE <class 'StopIteration'>
+
+testing\test_multicall.py:437: Failed
+________________ test_wrapper_stopiteration_passtrough[False] _________________
+
+has_hookwrapper = False
+
+    @pytest.mark.parametrize("has_hookwrapper", [True, False])
+    def test_wrapper_stopiteration_passtrough(has_hookwrapper: bool) -> None:
+        out = []
+    
+        @hookimpl(wrapper=True)
+        def wrap():
+            out.append("wrap")
+            try:
+                yield
+            finally:
+                out.append("wrap done")
+    
+        @hookimpl(wrapper=not has_hookwrapper, hookwrapper=has_hookwrapper)
+        def wrap_path2():
+            yield
+    
+        @hookimpl
+        def stop():
+            out.append("stop")
+            raise StopIteration
+    
+>       with pytest.raises(StopIteration):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE <class 'StopIteration'>
+
+testing\test_multicall.py:437: Failed
+=========================== short test summary info ===========================
+SKIPPED [1] testing\test_refactoring.py:25: Skipping test for inlining variable name
+SKIPPED [1] ..\AppData\Local\Programs\Python\Python314\Lib\site-packages\_pytest\unittest.py:498: only when getter setter refactoring is applied
+FAILED testing/test_multicall.py::test_wrapper_stopiteration_passtrough[True]
+FAILED testing/test_multicall.py::test_wrapper_stopiteration_passtrough[False]
+================== 2 failed, 132 passed, 2 skipped in 1.52s ===================
+
+============================================================
+STDERR:
