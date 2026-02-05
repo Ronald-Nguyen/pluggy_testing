@@ -1,0 +1,110 @@
+Task Description
+You are a strict code‑refactoring engine. You follow all rules exactly as written. Your task is to refactor a Python project to apply the Strategy pattern.
+
+Please note:
+1. The code must still function perfectly after the refactoring.
+2. All imports, references, and function calls must be updated accordingly.
+3. The style, formatting, and structure of the code must be preserved.
+4. Do not introduce any new functionality, logic changes, or unrelated formatting changes.
+5. For every modified file, return the complete updated file content to ensure that no changes are overlooked.
+6. The semantics and behavior of the code must not change.
+7. Only include files that required changes.
+8. Respond with the code blocks only. Your entire response must be machine-readable. Do not include any conversational filler.
+9. If you are unsure, do not guess. Only modify code when the change is certain.
+10. Every response must include meaningful modifications, improvements, or transformations. Returning the same code, even partially or with superficial edits, is strictly prohibited.
+11. Your final output must pass the existing test suite (pytest). If your changes would cause any test to fail, revise your refactor until all tests pass.
+
+Examples of strategy pattern refactorings:
+Example 1:
+Original Code:
+File `greet.py`:
+```python
+def greet(name):
+    if name == "Alice":
+        return "Hello Alice"
+    elif name == "Bob":
+        return "Hello Bob"
+    else:
+        return "Hello stranger"
+```
+
+Task Description:
+1. Refactor the method greet in the file greet.py to use the Strategy pattern.
+2. Extract each command-specific behavior into its own strategy function or method.
+3. Ensure that the original method is completely removed or replaced, and that only the new strategy-based dispatch implementation remains in the class.
+
+Output:
+File `greet.py`:
+```python
+STRATEGIES = {
+    "Alice": lambda name: "Hello Alice",
+    "Bob": lambda name: "Hello Bob",
+}
+
+def greet(name):
+    if name in STRATEGIES:
+        return STRATEGIES[name](name)
+    return "Hello stranger"
+```
+
+Example 2:
+Original Code:
+File `event.py`:
+```python
+def handle_event(event_type, payload):
+    if event_type == "start":
+        return f"Starting with {payload}"
+    elif event_type == "stop":
+        return f"Stopping with {payload}"
+    elif event_type == "pause":
+        return f"Pausing with {payload}"
+    elif event_type == "resume":
+        return f"Resuming with {payload}"
+    else:
+        raise ValueError("Unknown event")
+```
+
+
+Task Description:
+1. Refactor the method call_win32 in the file ansitowin32.py to use the Strategy pattern.
+2. Extract each command-specific behavior into its own strategy function or method.
+3. Ensure that the original method is completely removed or replaced, and that only the new strategy-based dispatch implementation remains in the class.
+
+Output:
+File `event.py`:
+```python
+def _strategy_start(payload, event_type):
+    return f"Starting with {payload}"
+
+def _strategy_stop(payload, event_type):
+    return f"Stopping with {payload}"
+
+def _strategy_pause(payload, event_type):
+    return f"Pausing with {payload}"
+
+def _strategy_resume(payload, event_type):
+    return f"Resuming with {payload}"
+
+EVENT_STRATEGIES = {
+    "start": _strategy_start,
+    "stop": _strategy_stop,
+    "pause": _strategy_pause,
+    "resume": _strategy_resume,
+}
+
+def handle_event(event_type, payload):
+    if event_type in EVENT_STRATEGIES:
+        return EVENT_STRATEGIES[event_type](payload, event_type)
+    raise ValueError("Unknown event")
+```
+
+
+Task Description:
+1. Refactor the method _multicall in the file _callers.py to use the Strategy pattern.
+2. Extract each command-specific behavior into its own strategy function or method.
+3. Ensure that the original method is completely removed or replaced, and that only the new strategy-based dispatch implementation remains in the class.
+4. For EACH modified file, respond exactly in the following format:
+
+File `filename.py`:
+```python
+[Complete updated file content]

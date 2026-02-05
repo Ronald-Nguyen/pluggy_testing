@@ -8,9 +8,9 @@ from pathlib import Path
 from datetime import datetime
 from unittest import result
 
-REFACTORING = 'coc_reduktion'
+REFACTORING = 'strategy_pattern'
 PATH = 'src/pluggy'
-ITERATIONS = 10
+ITERATIONS = 2
 GEMINI3 = 'gemini-3-pro-preview'
 GEMINI2 = 'gemini-2.5-flash'
 LLAMA = 'llama-3.3-70b-versatile'
@@ -23,7 +23,7 @@ MODEL_MISTRAL = CODESTRAL
 GROQ_API_KEY = os.environ.get('GROQ_API_KEY')
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 MISTRAL_API_KEY = os.environ.get('MISTRAL_API_KEY')
-LLM_API_KEY = GEMINI_API_KEY
+LLM_API_KEY = MISTRAL_API_KEY
 client = None
 MODEL = None
 
@@ -64,7 +64,7 @@ args = parser.parse_args()
 
 PROJECT_DIR = Path(args.project_path)
 PROMPT_TEMPLATE = Path(f"{REFACTORING}.txt").read_text(encoding='utf-8')
-RESULTS_DIR = Path(REFACTORING + "_results_" + MODEL)
+RESULTS_DIR = Path(REFACTORING + "_results2_" + MODEL)
 RESULTS_DIR.mkdir(exist_ok=True)
 
 def get_project_structure(project_dir: Path) -> str:
@@ -199,14 +199,44 @@ def write_summary(text: str) -> None:
     with open(RESULTS_DIR / f"{MODEL}_summary_results.txt", "a", encoding="utf-8") as f:
         f.write(text)
 
-def groq_generate(final_prompt: str) -> str:
+def _usage_to_dict(usage) -> dict | None:
+    if usage is None:
+        return None
+    if isinstance(usage, dict):
+        return usage
+    data = {}
+    for attr in ("prompt_tokens", "completion_tokens", "total_tokens",
+                 "prompt_token_count", "candidates_token_count", "total_token_count"):
+        if hasattr(usage, attr):
+            data[attr] = getattr(usage, attr)
+    return data or None
+
+def format_token_usage(usage: dict | None) -> str:
+    if not usage:
+        return "Tokens: n/a"
+    prompt = usage.get("prompt_tokens", usage.get("prompt_token_count"))
+    completion = usage.get("completion_tokens", usage.get("candidates_token_count"))
+    total = usage.get("total_tokens", usage.get("total_token_count"))
+    parts = []
+    if prompt is not None:
+        parts.append(f"prompt={prompt}")
+    if completion is not None:
+        parts.append(f"completion={completion}")
+    if total is not None:
+        parts.append(f"total={total}")
+    if not parts:
+        return "Tokens: n/a"
+    return "Tokens: " + ", ".join(parts)
+
+def groq_generate(final_prompt: str) -> tuple[str, dict | None]:
     resp = client.chat.completions.create(
         model=MODEL,
         content=final_prompt
     )
-    return resp.choices[0].message.content
+    usage = _usage_to_dict(getattr(resp, "usage", None))
+    return resp.choices[0].message.content, usage
 
-def gemini_generate(final_prompt: str) -> str:
+def gemini_generate(final_prompt: str) -> tuple[str, dict | None]:
     """Fragt Gemini (Text Completions) an und gibt den Text-Content zurück."""
     response = client.models.generate_content(
         model=MODEL,
@@ -221,10 +251,14 @@ def gemini_generate(final_prompt: str) -> str:
     if not response_text:
         raise ValueError("Leere Antwort erhalten")
 
-    usage = response.usage_metadata
-    return response_text
+    usage = None
+    usage_meta = getattr(response, "usage_metadata", None)
+    if usage_meta is not None:
+        usage = _usage_to_dict(usage_meta)
 
-def mistral_generate(prompt: str) -> str:
+    return response_text, usage
+
+def mistral_generate(prompt: str) -> tuple[str, dict | None]:
     res = client.chat.complete(
         model=MODEL,
         messages=[
@@ -236,17 +270,8 @@ def mistral_generate(prompt: str) -> str:
         temperature=0.2,
         stream=False
     )
-    return res.choices[0].message.content
-
-
-def ollama_generate(final_prompt: str) -> str:
-    response: ChatResponse = chat(model='qwen2.5-coder:7b', messages=[
-    {
-        'role': 'user',
-        'content': final_prompt,
-    },
-    ])
-    return response.message.content
+    usage = _usage_to_dict(getattr(res, "usage", None))
+    return res.choices[0].message.content, usage
 
 def main():
     YOUR_PROMPT = PROMPT_TEMPLATE
@@ -258,9 +283,8 @@ def main():
     project_structure = get_project_structure(PROJECT_DIR)
     code_block = get_all_python_files(PROJECT_DIR)
 
-    final_prompt = f"{YOUR_PROMPT}\n\nStruktur:\n{project_structure}\n\nCode:\n{code_block}"
+    final_prompt = f"{YOUR_PROMPT}\n\nStructure:\n{project_structure}\n\nCode:\n{code_block}"
     successful_iterations = 0
-    failed_iterations = 0
     
     with open(RESULTS_DIR / "full_prompt.txt", "w", encoding="utf-8") as f:
         f.write(final_prompt)
@@ -270,37 +294,35 @@ def main():
         restore_project(backup_dir, PROJECT_DIR)
 
         try:
+            usage = None
             if LLM_API_KEY == MISTRAL_API_KEY:
-                response_text = mistral_generate(final_prompt)
+                response_text, usage = mistral_generate(final_prompt)
             elif LLM_API_KEY == GEMINI_API_KEY:
-                response_text = gemini_generate(final_prompt)
+                response_text, usage = gemini_generate(final_prompt)
             elif LLM_API_KEY == GROQ_API_KEY:
-                response_text = groq_generate(final_prompt)
-            else:
-                response_text = ollama_generate(final_prompt)
+                response_text, usage = groq_generate(final_prompt)
+
 
             files = parse_ai_response(response_text)
             if not files:
-                failed_iterations += 1
                 continue
 
             apply_changes(PROJECT_DIR, files)
             test_result = run_pytest()
+            token_info = format_token_usage(usage)
 
             if test_result['success']:
                 successful_iterations += 1
-                write_summary(f"\nIteration {i} erfolgreich.")
+                write_summary(f"\nIteration {i} erfolgreich. {token_info}")
                 print(" Tests bestanden.")
             else:
-                failed_iterations += 1
-                write_summary(f"\nIteration {i} fehlgeschlagen.")
+                write_summary(f"\nIteration {i} fehlgeschlagen. {token_info}")
                 print(" Tests fehlgeschlagen.")
 
             save_results(i, RESULTS_DIR / f"iteration_{i:02d}", files, test_result, response_text)
 
         except Exception as e:
             print(f"Fehler: {e}")
-            failed_iterations += 1
 
     print(f"\nFertig. Erfolgsrate: {successful_iterations/ITERATIONS*100:.1f}%")
     restore_project(backup_dir, PROJECT_DIR)
