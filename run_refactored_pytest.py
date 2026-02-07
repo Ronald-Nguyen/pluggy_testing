@@ -86,24 +86,22 @@ def apply_changes(project_dir: Path | str, files: dict[str, str]) -> None:
             print(f" Fehler beim Schreiben von {filename}: {e}")
 
 
-def run_pytest(cwd: Path, env: dict[str, str] | None = None) -> dict[str, object]:
+def run_pytest():
     """Führt pytest aus und gibt das Ergebnis zurück."""
     try:
         result = subprocess.run(
-            ["pytest"],
-            capture_output=True,
-            text=True,
-            cwd=str(cwd),
-            env=env,
+            ['pytest'], 
+            capture_output=True, 
+            text=True, 
         )
         return {
-            "success": result.returncode == 0,
-            "stdout": result.stdout,
-            "stderr": result.stderr,
-            "returncode": result.returncode,
+            'success': result.returncode == 0,
+            'stdout': result.stdout,
+            'stderr': result.stderr,
+            'returncode': result.returncode
         }
     except Exception as e:
-        return {"success": False, "stdout": "", "stderr": str(e), "returncode": -1}
+        return {'success': False, 'stdout': '', 'stderr': str(e), 'returncode': -1}
 
 
 def write_text_file(path: Path, content: str) -> None:
@@ -252,8 +250,7 @@ def process_iteration(
     backup_project(project_src, backup_dir)
     try:
         apply_changes(project_src, snapshot_files)
-        pytest_cwd = resolve_pytest_cwd(project_src)
-        test_result = run_pytest(pytest_cwd)
+        test_result = run_pytest()
     finally:
         restore_project(backup_dir, project_src)
 
