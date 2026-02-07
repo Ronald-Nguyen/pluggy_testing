@@ -1,0 +1,6 @@
+--- backup/_manager.py
++++ refactored/_manager.py
+@@ -50,2 +50 @@
+-name:str=self.metadata["name"]
+-returnname
++returnself.metadata["name"]

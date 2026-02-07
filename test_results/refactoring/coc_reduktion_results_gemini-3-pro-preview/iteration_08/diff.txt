@@ -1,0 +1,57 @@
+--- backup/_callers.py
++++ refactored/_callers.py
+@@ -56,0 +57,12 @@
++def_get_call_args(
++hook_impl:HookImpl,caller_kwargs:Mapping[str,object]
++)->list[object]:
++try:
++return[caller_kwargs[argname]forargnameinhook_impl.argnames]
++exceptKeyErrorase:
++forargnameinhook_impl.argnames:
++ifargnamenotincaller_kwargs:
++raiseHookCallError(
++f"hookcallmustprovideargument{argname!r}"
++)frome
++raise#Shouldnotbereached
+@@ -70,8 +82 @@
+-try:
+-args=[caller_kwargs[argname]forargnameinhook_impl.argnames]
+-exceptKeyErrorase:
+-forargnameinhook_impl.argnames:
+-ifargnamenotincaller_kwargs:
+-raiseHookCallError(
+-f"hookcallmustprovideargument{argname!r}"
+-)frome
++args=_get_call_args(hook_impl,caller_kwargs)
+
+--- backup/_manager.py
++++ refactored/_manager.py
+@@ -89,0 +90,3 @@
++self._register_impl(plugin,plugin_name,name)
++returnplugin_name
++def_register_impl(self,plugin:_Plugin,plugin_name:str,name:str)->None:
+@@ -91 +94,2 @@
+-ifhookimpl_optsisnotNone:
++ifhookimpl_optsisNone:
++return
+@@ -104 +107,0 @@
+-returnplugin_name
+@@ -149,0 +153,7 @@
++ifself._register_spec(module_or_class,name):
++names.append(name)
++ifnotnames:
++raiseValueError(
++f"didnotfindany{self.project_name!r}hooksin{module_or_class!r}"
++)
++def_register_spec(self,module_or_class:_Namespace,name:str)->bool:
+@@ -151 +161,2 @@
+-ifspec_optsisnotNone:
++ifspec_optsisNone:
++returnFalse
+@@ -160,5 +171 @@
+-names.append(name)
+-ifnotnames:
+-raiseValueError(
+-f"didnotfindany{self.project_name!r}hooksin{module_or_class!r}"
+-)
++returnTrue

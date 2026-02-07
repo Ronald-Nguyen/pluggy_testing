@@ -1,0 +1,135 @@
+--- backup/_callers.py
++++ refactored/_callers.py
+@@ -66 +65,0 @@
+-try:
+@@ -68,0 +68,15 @@
++_multicall_execute(
++hook_name,hook_impls,caller_kwargs,firstresult,results,teardowns
++)
++exceptBaseExceptionasexc:
++exception=exc
++return_multicall_teardown(teardowns,results,firstresult,exception)
++def_multicall_execute(
++hook_name:str,
++hook_impls:Sequence[HookImpl],
++caller_kwargs:Mapping[str,object],
++firstresult:bool,
++results:list[object],
++teardowns:list[Teardown],
++)->None:
++__tracebackhide__=True
+@@ -73,5 +87 @@
+-forargnameinhook_impl.argnames:
+-ifargnamenotincaller_kwargs:
+-raiseHookCallError(
+-f"hookcallmustprovideargument{argname!r}"
+-)frome
++_raise_arg_error(hook_impl,caller_kwargs,e)
+@@ -83 +92,0 @@
+-try:
+@@ -85,0 +95 @@
++try:
+@@ -87 +96,0 @@
+-teardowns.append(function_gen)
+@@ -89,0 +99 @@
++teardowns.append(function_gen)
+@@ -96,3 +106,16 @@
+-exceptBaseExceptionasexc:
+-exception=exc
+-finally:
++def_raise_arg_error(
++hook_impl:HookImpl,caller_kwargs:Mapping[str,object],e:KeyError
++)->NoReturn:
++forargnameinhook_impl.argnames:
++ifargnamenotincaller_kwargs:
++raiseHookCallError(
++f"hookcallmustprovideargument{argname!r}"
++)frome
++raisee
++def_multicall_teardown(
++teardowns:list[Teardown],
++results:list[object],
++firstresult:bool,
++exception:BaseException|None,
++)->object|list[object]:
++__tracebackhide__=True
+@@ -109,4 +132 @@
+-if(
+-isinstance(exception,StopIteration)
+-andre.__cause__isexception
+-):
++ifisinstance(exception,StopIteration)andre.__cause__isexception:
+
+--- backup/_hooks.py
++++ refactored/_hooks.py
+@@ -256,6 +256 @@
+-fori,methodinenumerate(self._hookimpls):
+-ifmethod.hookwrapperormethod.wrapper:
+-splitpoint=i
+-break
+-else:
+-splitpoint=len(self._hookimpls)
++splitpoint=self._find_splitpoint()
+@@ -270,0 +266,7 @@
++self._insert_default(hookimpl,start,end)
++def_find_splitpoint(self)->int:
++fori,methodinenumerate(self._hookimpls):
++ifmethod.hookwrapperormethod.wrapper:
++returni
++returnlen(self._hookimpls)
++def_insert_default(self,hookimpl:HookImpl,start:int,end:int)->None:
+@@ -278 +280,2 @@
+-ifself.spec:
++ifnotself.spec:
++return
+@@ -281,5 +284,3 @@
+-notincall=",".join(
+-repr(argname)
+-forargnameinself.spec.argnames
+-ifargnamenotinkwargs.keys()
+-)
++missing_args=[
++repr(arg)forarginself.spec.argnamesifargnotinkwargs
++]
+@@ -287 +288 @@
+-f"Argument(s){notincall}whicharedeclaredinthehookspec"
++f"Argument(s){','.join(missing_args)}whicharedeclaredinthehookspec"
+
+--- backup/_manager.py
++++ refactored/_manager.py
+@@ -88,0 +89,3 @@
++self._register_hooks(plugin,plugin_name)
++returnplugin_name
++def_register_hooks(self,plugin:_Plugin,plugin_name:str)->None:
+@@ -91 +94,2 @@
+-ifhookimpl_optsisnotNone:
++ifhookimpl_optsisNone:
++continue
+@@ -92,0 +97,8 @@
++self._register_hook_impl(plugin,plugin_name,name,hookimpl_opts)
++def_register_hook_impl(
++self,
++plugin:_Plugin,
++plugin_name:str,
++name:str,
++hookimpl_opts:HookimplOpts,
++)->None:
+@@ -104 +115,0 @@
+-returnplugin_name
+@@ -245,6 +256 @@
+-if(
+-ep.group!=group
+-or(nameisnotNoneandep.name!=name)
+-orself.get_plugin(ep.name)
+-orself.is_blocked(ep.name)
+-):
++ifself._should_skip_entry_point(ep,group,name):
+@@ -256,0 +263,8 @@
++def_should_skip_entry_point(self,ep:Any,group:str,name:str|None)->bool:
++ifep.group!=group:
++returnTrue
++ifnameisnotNoneandep.name!=name:
++returnTrue
++ifself.get_plugin(ep.name)orself.is_blocked(ep.name):
++returnTrue
++returnFalse

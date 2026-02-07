@@ -1,0 +1,147 @@
+--- backup/_callers.py
++++ refactored/_callers.py
+@@ -57,9 +57 @@
+-def_multicall(
+-hook_name:str,
+-hook_impls:Sequence[HookImpl],
+-caller_kwargs:Mapping[str,object],
+-firstresult:bool,
+-)->object|list[object]:
+-__tracebackhide__=True
+-results:list[object]=[]
+-exception=None
++def_get_args(hook_impl:HookImpl,caller_kwargs:Mapping[str,object])->list[object]:
+@@ -67,5 +59 @@
+-teardowns:list[Teardown]=[]
+-try:
+-forhook_implinreversed(hook_impls):
+-try:
+-args=[caller_kwargs[argname]forargnameinhook_impl.argnames]
++return[caller_kwargs[argname]forargnameinhook_impl.argnames]
+@@ -77,0 +66,11 @@
++raise
++def_exec_hook_impls(
++hook_name:str,
++hook_impls:Sequence[HookImpl],
++caller_kwargs:Mapping[str,object],
++firstresult:bool,
++teardowns:list[Teardown],
++results:list[object],
++)->None:
++forhook_implinreversed(hook_impls):
++args=_get_args(hook_impl,caller_kwargs)
+@@ -83 +81,0 @@
+-try:
+@@ -85,0 +84 @@
++try:
+@@ -87 +85,0 @@
+-teardowns.append(function_gen)
+@@ -89,0 +88 @@
++teardowns.append(function_gen)
+@@ -96,7 +95,3 @@
+-exceptBaseExceptionasexc:
+-exception=exc
+-finally:
+-iffirstresult:
+-result=results[0]ifresultselseNone
+-else:
+-result=results
++def_run_teardowns(
++teardowns:list[Teardown],result:object,exception:BaseException|None
++)->tuple[object,BaseException|None]:
+@@ -115 +109,0 @@
+-else:
+@@ -127,0 +122,23 @@
++returnresult,exception
++def_multicall(
++hook_name:str,
++hook_impls:Sequence[HookImpl],
++caller_kwargs:Mapping[str,object],
++firstresult:bool,
++)->object|list[object]:
++__tracebackhide__=True
++results:list[object]=[]
++exception=None
++teardowns:list[Teardown]=[]
++try:
++_exec_hook_impls(
++hook_name,hook_impls,caller_kwargs,firstresult,teardowns,results
++)
++exceptBaseExceptionasexc:
++exception=exc
++finally:
++iffirstresult:
++result=results[0]ifresultselseNone
++else:
++result=results
++result,exception=_run_teardowns(teardowns,result,exception)
+
+--- backup/_hooks.py
++++ refactored/_hooks.py
+@@ -256,10 +256,2 @@
+-fori,methodinenumerate(self._hookimpls):
+-ifmethod.hookwrapperormethod.wrapper:
+-splitpoint=i
+-break
+-else:
+-splitpoint=len(self._hookimpls)
+-ifhookimpl.hookwrapperorhookimpl.wrapper:
+-start,end=splitpoint,len(self._hookimpls)
+-else:
+-start,end=0,splitpoint
++splitpoint=self._find_wrapper_splitpoint()
++start,end=self._get_insertion_range(hookimpl,splitpoint)
+@@ -270,0 +263,13 @@
++self._insert_normal_hook(hookimpl,start,end)
++def_find_wrapper_splitpoint(self)->int:
++fori,methodinenumerate(self._hookimpls):
++ifmethod.hookwrapperormethod.wrapper:
++returni
++returnlen(self._hookimpls)
++def_get_insertion_range(
++self,hookimpl:HookImpl,splitpoint:int
++)->tuple[int,int]:
++ifhookimpl.hookwrapperorhookimpl.wrapper:
++returnsplitpoint,len(self._hookimpls)
++return0,splitpoint
++def_insert_normal_hook(self,hookimpl:HookImpl,start:int,end:int)->None:
+
+--- backup/_manager.py
++++ refactored/_manager.py
+@@ -88,0 +89,3 @@
++self._register_hooks_for_plugin(plugin,plugin_name)
++returnplugin_name
++def_register_hooks_for_plugin(self,plugin:_Plugin,plugin_name:str)->None:
+@@ -91 +94,2 @@
+-ifhookimpl_optsisnotNone:
++ifhookimpl_optsisNone:
++continue
+@@ -92,0 +97,8 @@
++self._register_hookimpl(plugin,plugin_name,name,hookimpl_opts)
++def_register_hookimpl(
++self,
++plugin:_Plugin,
++plugin_name:str,
++name:str,
++hookimpl_opts:HookimplOpts,
++)->None:
+@@ -104 +115,0 @@
+-returnplugin_name
+@@ -245,7 +256 @@
+-if(
+-ep.group!=group
+-or(nameisnotNoneandep.name!=name)
+-orself.get_plugin(ep.name)
+-orself.is_blocked(ep.name)
+-):
+-continue
++ifself._is_entrypoint_loadable(ep,group,name):
+@@ -256,0 +262,8 @@
++def_is_entrypoint_loadable(self,ep:Any,group:str,name:str|None)->bool:
++ifep.group!=group:
++returnFalse
++ifnameisnotNoneandep.name!=name:
++returnFalse
++ifself.get_plugin(ep.name)orself.is_blocked(ep.name):
++returnFalse
++returnTrue

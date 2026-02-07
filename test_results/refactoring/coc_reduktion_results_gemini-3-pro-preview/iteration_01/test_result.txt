@@ -1,0 +1,95 @@
+TEST_STATUS: FAILURE
+DIFF_STATUS: SUCCESS
+RETURNCODE: 1
+TIMESTAMP: 2026-02-08T00:25:07.081174
+
+=== PYTEST STDOUT ===
+============================= test session starts =============================
+platform win32 -- Python 3.14.2, pytest-9.0.2, pluggy-0.1.dev945+g0cf9e32a7.d20260207
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\Users\ronal\pluggy_testing
+configfile: tox.ini
+testpaths: testing
+plugins: anyio-4.12.1, hypothesis-6.148.8, benchmark-5.2.3, cov-7.0.0
+collected 202 items
+
+testing\test_coverage.py ............................................... [ 23%]
+...................                                                      [ 32%]
+testing\test_details.py ..........                                       [ 37%]
+testing\test_helpers.py ......                                           [ 40%]
+testing\test_hookcaller.py ......................                        [ 51%]
+testing\test_invocations.py ...............                              [ 58%]
+testing\test_multicall.py ........................                       [ 70%]
+testing\test_pluginmanager.py .........................................  [ 91%]
+testing\test_refactoring.py s.s.........                                 [ 97%]
+testing\test_result.py .                                                 [ 97%]
+testing\test_tracer.py ....                                              [ 99%]
+testing\test_warnings.py F                                               [100%]
+
+================================== FAILURES ===================================
+________________________ test_teardown_raised_warning _________________________
+
+pm = <pluggy._manager.PluginManager object at 0x000002AD7A587E50>
+
+    def test_teardown_raised_warning(pm: PluginManager) -> None:
+        class Api:
+            @hookspec
+            def my_hook(self):
+                raise NotImplementedError()
+    
+        pm.add_hookspecs(Api)
+    
+        class Plugin1:
+            @hookimpl
+            def my_hook(self):
+                pass
+    
+        class Plugin2:
+            @hookimpl(hookwrapper=True)
+            def my_hook(self):
+                yield
+                1 / 0
+    
+        class Plugin3:
+            @hookimpl(hookwrapper=True)
+            def my_hook(self):
+                yield
+    
+        pm.register(Plugin1(), "plugin1")
+        pm.register(Plugin2(), "plugin2")
+        pm.register(Plugin3(), "plugin3")
+        with pytest.warns(
+            PluggyTeardownRaisedWarning,
+            match=r"\bplugin2\b.*\bmy_hook\b.*\n.*ZeroDivisionError",
+        ) as wc:
+            with pytest.raises(ZeroDivisionError):
+                pm.hook.my_hook()
+        assert len(wc.list) == 1
+>       assert Path(wc.list[0].filename).name == "test_warnings.py"
+E       AssertionError: assert '_hooks.py' == 'test_warnings.py'
+E         
+E         - test_warnings.py
+E         + _hooks.py
+
+testing\test_warnings.py:49: AssertionError
+=============================== tests coverage ================================
+_______________ coverage: platform win32, python 3.14.2-final-0 _______________
+
+Name                      Stmts   Miss  Cover   Missing
+-------------------------------------------------------
+src\pluggy\__init__.py       19      0   100%
+src\pluggy\_callers.py      106      1    99%   80
+src\pluggy\_hooks.py        255      0   100%
+src\pluggy\_manager.py      247      2    99%   338, 340
+src\pluggy\_result.py        52      0   100%
+src\pluggy\_tracing.py       44      0   100%
+src\pluggy\_warnings.py       6      0   100%
+-------------------------------------------------------
+TOTAL                       729      3    99%
+=========================== short test summary info ===========================
+FAILED testing/test_warnings.py::test_teardown_raised_warning - AssertionErro...
+================== 1 failed, 199 passed, 2 skipped in 0.95s ===================
+
+
+=== PYTEST STDERR ===
+

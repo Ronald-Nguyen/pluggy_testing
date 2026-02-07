@@ -1,0 +1,103 @@
+--- backup/_callers.py
++++ refactored/_callers.py
+@@ -66 +65,0 @@
+-try:
+@@ -68,0 +68,19 @@
++_exec_hook_loop(
++hook_name,hook_impls,caller_kwargs,firstresult,teardowns,results
++)
++exceptBaseExceptionasexc:
++exception=exc
++iffirstresult:
++result=results[0]ifresultselseNone
++else:
++result=results
++return_teardown_loop(teardowns,result,exception)
++def_exec_hook_loop(
++hook_name:str,
++hook_impls:Sequence[HookImpl],
++caller_kwargs:Mapping[str,object],
++firstresult:bool,
++teardowns:list[Teardown],
++results:list[object],
++)->None:
++__tracebackhide__=True
+@@ -69,0 +88,8 @@
++args=_get_args(hook_impl,caller_kwargs)
++ifhook_impl.hookwrapper:
++function_gen=run_old_style_hookwrapper(hook_impl,hook_name,args)
++next(function_gen)
++teardowns.append(function_gen)
++elifhook_impl.wrapper:
++res=hook_impl.function(*args)
++function_gen=cast(Generator[None,object,object],res)
+@@ -71 +97,13 @@
+-args=[caller_kwargs[argname]forargnameinhook_impl.argnames]
++next(function_gen)
++exceptStopIteration:
++_raise_wrapfail(function_gen,"didnotyield")
++teardowns.append(function_gen)
++else:
++res=hook_impl.function(*args)
++ifresisnotNone:
++results.append(res)
++iffirstresult:
++break
++def_get_args(hook_impl:HookImpl,caller_kwargs:Mapping[str,object])->list[object]:
++try:
++return[caller_kwargs[argname]forargnameinhook_impl.argnames]
+@@ -78,25 +116,4 @@
+-ifhook_impl.hookwrapper:
+-function_gen=run_old_style_hookwrapper(hook_impl,hook_name,args)
+-next(function_gen)
+-teardowns.append(function_gen)
+-elifhook_impl.wrapper:
+-try:
+-res=hook_impl.function(*args)
+-function_gen=cast(Generator[None,object,object],res)
+-next(function_gen)
+-teardowns.append(function_gen)
+-exceptStopIteration:
+-_raise_wrapfail(function_gen,"didnotyield")
+-else:
+-res=hook_impl.function(*args)
+-ifresisnotNone:
+-results.append(res)
+-iffirstresult:
+-break
+-exceptBaseExceptionasexc:
+-exception=exc
+-finally:
+-iffirstresult:
+-result=results[0]ifresultselseNone
+-else:
+-result=results
++raise
++def_teardown_loop(
++teardowns:list[Teardown],result:object,exception:BaseException|None
++)->object:
+
+--- backup/_manager.py
++++ refactored/_manager.py
+@@ -89,0 +90,3 @@
++self._register_hookimpl(plugin,plugin_name,name)
++returnplugin_name
++def_register_hookimpl(self,plugin:_Plugin,plugin_name:str,name:str)->None:
+@@ -91 +94,2 @@
+-ifhookimpl_optsisnotNone:
++ifhookimpl_optsisNone:
++return
+@@ -104 +107,0 @@
+-returnplugin_name
+@@ -245,6 +248,5 @@
+-if(
+-ep.group!=group
+-or(nameisnotNoneandep.name!=name)
+-orself.get_plugin(ep.name)
+-orself.is_blocked(ep.name)
+-):
++ifep.group!=group:
++continue
++ifnameisnotNoneandep.name!=name:
++continue
++ifself.get_plugin(ep.name)orself.is_blocked(ep.name):

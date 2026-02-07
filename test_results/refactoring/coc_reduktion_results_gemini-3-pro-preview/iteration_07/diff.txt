@@ -1,0 +1,80 @@
+--- backup/_callers.py
++++ refactored/_callers.py
+@@ -56,0 +57,21 @@
++def_args_from_hook_impl(
++hook_impl:HookImpl,caller_kwargs:Mapping[str,object]
++)->list[object]:
++try:
++return[caller_kwargs[argname]forargnameinhook_impl.argnames]
++exceptKeyErrorase:
++forargnameinhook_impl.argnames:
++ifargnamenotincaller_kwargs:
++raiseHookCallError(
++f"hookcallmustprovideargument{argname!r}"
++)frome
++raise
++def_notify_teardown_exception(teardown:Teardown,exception:BaseException)->bool:
++try:
++teardown.throw(exception)
++exceptRuntimeErrorasre:
++ifisinstance(exception,StopIteration)andre.__cause__isexception:
++teardown.close()
++returnTrue
++raise
++returnFalse
+@@ -70,8 +91 @@
+-try:
+-args=[caller_kwargs[argname]forargnameinhook_impl.argnames]
+-exceptKeyErrorase:
+-forargnameinhook_impl.argnames:
+-ifargnamenotincaller_kwargs:
+-raiseHookCallError(
+-f"hookcallmustprovideargument{argname!r}"
+-)frome
++args=_args_from_hook_impl(hook_impl,caller_kwargs)
+@@ -82,2 +96,2 @@
+-elifhook_impl.wrapper:
+-try:
++continue
++ifhook_impl.wrapper:
+@@ -85,0 +100 @@
++try:
+@@ -87 +101,0 @@
+-teardowns.append(function_gen)
+@@ -90 +104,2 @@
+-else:
++teardowns.append(function_gen)
++continue
+@@ -106,8 +121 @@
+-try:
+-teardown.throw(exception)
+-exceptRuntimeErrorasre:
+-if(
+-isinstance(exception,StopIteration)
+-andre.__cause__isexception
+-):
+-teardown.close()
++if_notify_teardown_exception(teardown,exception):
+@@ -115,2 +122,0 @@
+-else:
+-raise
+
+--- backup/_manager.py
++++ refactored/_manager.py
+@@ -245,6 +245 @@
+-if(
+-ep.group!=group
+-or(nameisnotNoneandep.name!=name)
+-orself.get_plugin(ep.name)
+-orself.is_blocked(ep.name)
+-):
++ifself._is_entrypoint_excluded(ep,group,name):
+@@ -256,0 +252,8 @@
++def_is_entrypoint_excluded(self,ep:Any,group:str,name:str|None)->bool:
++ifep.group!=group:
++returnTrue
++ifnameisnotNoneandep.name!=name:
++returnTrue
++ifself.get_plugin(ep.name)orself.is_blocked(ep.name):
++returnTrue
++returnFalse

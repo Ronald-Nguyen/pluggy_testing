@@ -1,0 +1,47 @@
+TEST_STATUS: SUCCESS
+DIFF_STATUS: SUCCESS
+RETURNCODE: 0
+TIMESTAMP: 2026-02-08T00:12:53.036644
+
+=== PYTEST STDOUT ===
+============================= test session starts =============================
+platform win32 -- Python 3.14.2, pytest-9.0.2, pluggy-0.1.dev945+g0cf9e32a7.d20260207
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\Users\ronal\pluggy_testing
+configfile: tox.ini
+testpaths: testing
+plugins: anyio-4.12.1, hypothesis-6.148.8, benchmark-5.2.3, cov-7.0.0
+collected 202 items
+
+testing\test_coverage.py ............................................... [ 23%]
+...................                                                      [ 32%]
+testing\test_details.py ..........                                       [ 37%]
+testing\test_helpers.py ......                                           [ 40%]
+testing\test_hookcaller.py ......................                        [ 51%]
+testing\test_invocations.py ...............                              [ 58%]
+testing\test_multicall.py ........................                       [ 70%]
+testing\test_pluginmanager.py .........................................  [ 91%]
+testing\test_refactoring.py s.s.........                                 [ 97%]
+testing\test_result.py .                                                 [ 97%]
+testing\test_tracer.py ....                                              [ 99%]
+testing\test_warnings.py .                                               [100%]
+
+=============================== tests coverage ================================
+_______________ coverage: platform win32, python 3.14.2-final-0 _______________
+
+Name                      Stmts   Miss  Cover   Missing
+-------------------------------------------------------
+src\pluggy\__init__.py       19      0   100%
+src\pluggy\_callers.py       99      0   100%
+src\pluggy\_hooks.py        250      0   100%
+src\pluggy\_manager.py      233      0   100%
+src\pluggy\_result.py        52      0   100%
+src\pluggy\_tracing.py       44      0   100%
+src\pluggy\_warnings.py       6      0   100%
+-------------------------------------------------------
+TOTAL                       703      0   100%
+======================= 200 passed, 2 skipped in 0.92s ========================
+
+
+=== PYTEST STDERR ===
+

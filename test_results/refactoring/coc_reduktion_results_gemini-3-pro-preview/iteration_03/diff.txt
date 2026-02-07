@@ -1,0 +1,127 @@
+--- backup/_callers.py
++++ refactored/_callers.py
+@@ -57,6 +57,3 @@
+-def_multicall(
+-hook_name:str,
+-hook_impls:Sequence[HookImpl],
+-caller_kwargs:Mapping[str,object],
+-firstresult:bool,
+-)->object|list[object]:
++def_get_args(
++hook_impl:HookImpl,caller_kwargs:Mapping[str,object]
++)->list[object]:
+@@ -64,2 +60,0 @@
+-results:list[object]=[]
+-exception=None
+@@ -67,5 +62 @@
+-teardowns:list[Teardown]=[]
+-try:
+-forhook_implinreversed(hook_impls):
+-try:
+-args=[caller_kwargs[argname]forargnameinhook_impl.argnames]
++return[caller_kwargs[argname]forargnameinhook_impl.argnames]
+@@ -78,26 +69,7 @@
+-ifhook_impl.hookwrapper:
+-function_gen=run_old_style_hookwrapper(hook_impl,hook_name,args)
+-next(function_gen)
+-teardowns.append(function_gen)
+-elifhook_impl.wrapper:
+-try:
+-res=hook_impl.function(*args)
+-function_gen=cast(Generator[None,object,object],res)
+-next(function_gen)
+-teardowns.append(function_gen)
+-exceptStopIteration:
+-_raise_wrapfail(function_gen,"didnotyield")
+-else:
+-res=hook_impl.function(*args)
+-ifresisnotNone:
+-results.append(res)
+-iffirstresult:
+-break
+-exceptBaseExceptionasexc:
+-exception=exc
+-finally:
+-iffirstresult:
+-result=results[0]ifresultselseNone
+-else:
+-result=results
+-forteardowninreversed(teardowns):
++raise#Shouldbeunreachable
++def_teardown_one(
++teardown:Teardown,
++result:object,
++exception:BaseException|None,
++)->tuple[object,BaseException|None]:
++__tracebackhide__=True
+@@ -114,2 +86 @@
+-continue
+-else:
++returnresult,exception
+@@ -121 +92,12 @@
+-result=si.value
++returnsi.value,None
++exceptBaseExceptionase:
++returnresult,e
++_raise_wrapfail(teardown,"hassecondyield")
++def_multicall(
++hook_name:str,
++hook_impls:Sequence[HookImpl],
++caller_kwargs:Mapping[str,object],
++firstresult:bool,
++)->object|list[object]:
++__tracebackhide__=True
++results:list[object]=[]
+@@ -123,5 +105,30 @@
+-continue
+-exceptBaseExceptionase:
+-exception=e
+-continue
+-_raise_wrapfail(teardown,"hassecondyield")
++teardowns:list[Teardown]=[]
++try:
++forhook_implinreversed(hook_impls):
++args=_get_args(hook_impl,caller_kwargs)
++ifhook_impl.hookwrapper:
++function_gen=run_old_style_hookwrapper(hook_impl,hook_name,args)
++next(function_gen)
++teardowns.append(function_gen)
++elifhook_impl.wrapper:
++res=hook_impl.function(*args)
++function_gen=cast(Generator[None,object,object],res)
++try:
++next(function_gen)
++exceptStopIteration:
++_raise_wrapfail(function_gen,"didnotyield")
++teardowns.append(function_gen)
++else:
++res=hook_impl.function(*args)
++ifresisnotNone:
++results.append(res)
++iffirstresult:
++break
++exceptBaseExceptionasexc:
++exception=exc
++iffirstresult:
++result=results[0]ifresultselseNone
++else:
++result=results
++forteardowninreversed(teardowns):
++result,exception=_teardown_one(teardown,result,exception)
+@@ -130 +136,0 @@
+-else:
+
+--- backup/_manager.py
++++ refactored/_manager.py
+@@ -245,6 +245,5 @@
+-if(
+-ep.group!=group
+-or(nameisnotNoneandep.name!=name)
+-orself.get_plugin(ep.name)
+-orself.is_blocked(ep.name)
+-):
++ifep.group!=group:
++continue
++ifnameisnotNoneandep.name!=name:
++continue
++ifself.get_plugin(ep.name)orself.is_blocked(ep.name):

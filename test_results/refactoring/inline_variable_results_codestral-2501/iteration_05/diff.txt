@@ -1,0 +1,10 @@
+--- backup/_manager.py
++++ refactored/_manager.py
+@@ -50,2 +50 @@
+-name:str=self.metadata["name"]
+-returnname
++returnself.metadata["name"]
+@@ -176,2 +175 @@
+-name:str|None=getattr(plugin,"__name__",None)
+-returnnameorstr(id(plugin))
++returngetattr(plugin,"__name__",None)orstr(id(plugin))

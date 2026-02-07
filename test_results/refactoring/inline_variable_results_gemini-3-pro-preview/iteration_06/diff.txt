@@ -1,0 +1,172 @@
+--- backup/_manager.py
++++ refactored/_manager.py
+@@ -27,0 +28 @@
++#importtlib.metadataimportisslow,deferit.
+@@ -41,0 +43,4 @@
++"""Pluginfailedvalidation.
++:paramplugin:Thepluginwhichfailedvalidation.
++:parammessage:Errormessage.
++"""
+@@ -43,0 +49 @@
++#:Thepluginwhichfailedvalidation.
+@@ -45,0 +52 @@
++"""Emulateapkg_resourcesDistribution"""
+@@ -50,2 +57 @@
+-name:str=self.metadata["name"]
+-returnname
++returnself.metadata["name"]
+@@ -56,0 +63,11 @@
++"""Coreclasswhichmanagesregistrationofpluginobjectsand1:Nhook
++calling.
++Youcanregisternewhooksbycalling:meth:`add_hookspecs(module_or_class)
++<PluginManager.add_hookspecs>`.
++Youcanregisterpluginobjects(whichcontainhookimplementations)by
++calling:meth:`register(plugin)<PluginManager.register>`.
++Fordebuggingpurposesyoucancall:meth:`PluginManager.enable_tracing`
++whichwillsubsequentlysenddebuginformationtothetracehelper.
++:paramproject_name:
++Theshortprojectname.Prefersnakecase.Makesureit'sunique!
++"""
+@@ -57,0 +75 @@
++#:Theprojectname.
+@@ -60,0 +79,2 @@
++#:The"hookrelay",usedtocallahookonallregisteredplugins.
++#:See:ref:`calling`.
+@@ -61,0 +82 @@
++#:Thetracingentrypoint.See:ref:`tracing`.
+@@ -72,0 +94,2 @@
++#calledfromallhookcallerinstances.
++#enable_tracingwillsetitsownwrappingfunctionatself._inner_hookexec
+@@ -74,0 +98,9 @@
++"""Registerapluginandreturnitsname.
++:paramname:
++Thenameunderwhichtoregistertheplugin.Ifnotspecified,a
++nameisgeneratedusing:func:`get_canonical_name`.
++:returns:
++Thepluginname.Ifthenameisblockedfromregistering,returns
++``None``.
++Ifthepluginisalreadyregistered,raisesa:exc:`ValueError`.
++"""
+@@ -78 +110 @@
+-returnNone
++returnNone#blockedplugin,returnNonetoindicatenoregistration
+@@ -87,0 +120,2 @@
++#XXXifanerrorhappensweshouldmakesurenostatehasbeen
++#changedatpointofreturn
+@@ -88,0 +123 @@
++#registermatchinghookimplementationsoftheplugin
+@@ -105,0 +141,8 @@
++"""Trytoobtainahookimplementationfromanitemwiththegivenname
++inthegivenpluginwhichisbeingsearchedforhookimpls.
++:returns:
++Theparsedhookimploptions,orNonetoskipthegivenitem.
++Thismethodcanbeoverriddenby``PluginManager``subclassesto
++customizehowhookimplementationarepickedup.Bydefault,returnsthe
++optionsforitemsdecoratedwith:class:`HookimplMarker`.
++"""
+@@ -113,2 +156,2 @@
+-exceptException:
+-res={}
++exceptException:#pragma:nocover
++res={}#type:ignore[assignment]#pragma:nocover
+@@ -116 +159,2 @@
+-res=None
++#falsepositive
++res=None#type:ignore[unreachable]#pragma:nocover
+@@ -120,0 +165,5 @@
++"""Unregisterapluginandallofitshookimplementations.
++Theplugincanbespecifiedeitherbythepluginobjectortheplugin
++name.Ifbotharespecified,theymustagree.
++Returnstheunregisteredplugin,or``None``ifnotfound.
++"""
+@@ -132,0 +182 @@
++#ifself._name2plugin[name]==Noneregistrationwasblocked:ignore
+@@ -137,0 +188 @@
++"""Blockregistrationsofthegivenname,unregisterifalreadyregistered."""
+@@ -140,0 +192 @@
++"""Returnwhetherthegivenpluginnameisblocked."""
+@@ -142,0 +195,3 @@
++"""Unblocksaname.
++Returnswhetherthenamewasactuallyblocked.
++"""
+@@ -147,0 +203,4 @@
++"""Addnewhookspecificationsdefinedinthegiven``module_or_class``.
++Functionsarerecognizedashookspecificationsiftheyhavebeen
++decoratedwithamatching:class:`HookspecMarker`.
++"""
+@@ -156,0 +216 @@
++#Pluginsregisteredthishookwithoutknowingthespec.
+@@ -167,0 +228,9 @@
++"""Trytoobtainahookspecificationfromanitemwiththegivenname
++inthegivenmoduleorclasswhichisbeingsearchedforhookspecs.
++:returns:
++Theparsedhookspecoptionsfordefiningahook,orNonetoskipthe
++givenitem.
++Thismethodcanbeoverriddenby``PluginManager``subclassesto
++customizehowhookspecificationsarepickedup.Bydefault,returnsthe
++optionsforitemsdecoratedwith:class:`HookspecMarker`.
++"""
+@@ -171,0 +241 @@
++"""Returnasetofallregisteredpluginobjects."""
+@@ -173,0 +244 @@
++"""Returnwhetherthepluginisalreadyregistered."""
+@@ -175,0 +247,6 @@
++"""Returnacanonicalnameforapluginobject.
++Notethatapluginmayberegisteredunderadifferentname
++specifiedbythecallerof:meth:`register(plugin,name)<register>`.
++Toobtainthenameofaregisteredpluginuse:meth:`get_name(plugin)
++<get_name>`instead.
++"""
+@@ -178,0 +256 @@
++"""Returnthepluginregisteredunderthegivenname,ifany."""
+@@ -180,0 +259 @@
++"""Returnwhetherapluginwiththegivennameisregistered."""
+@@ -182,0 +262,2 @@
++"""Returnthenamethepluginisregisteredunder,or``None``if
++isisn't."""
+@@ -196,0 +278 @@
++#positionalargchecking
+@@ -228,0 +311,3 @@
++"""Verifythatallhookswhichhavenotbeenverifiedagainsta
++hookspecificationareoptional,otherwiseraise
++:exc:`PluginValidationError`."""
+@@ -240,0 +326,8 @@
++"""Loadmodulesfromqueryingthespecifiedsetuptools``group``.
++:paramgroup:
++Entrypointgrouptoloadplugins.
++:paramname:
++Ifgiven,loadsonlypluginswiththegiven``name``.
++:return:
++Thenumberofpluginsloadedbythiscall.
++"""
+@@ -247,0 +341 @@
++#alreadyregistered
+@@ -257,0 +352,2 @@
++"""Returnalistof(plugin,distinfo)pairsforall
++setuptools-registeredplugins."""
+@@ -259,0 +356 @@
++"""Returnalistof(name,plugin)pairsforallregisteredplugins."""
+@@ -261,0 +359,5 @@
++"""Getallhookcallersforthespecifiedplugin.
++:returns:
++Thehookcallers,or``None``if``plugin``isnotregisteredin
++thispluginmanager.
++"""
+@@ -272,0 +375,9 @@
++"""Addbefore/aftertracingfunctionsforallhooks.
++Returnsanundofunctionwhich,whencalled,removestheaddedtracers.
++``before(hook_name,hook_impls,kwargs)``willbecalledahead
++ofallhookcallsandreceiveahookcallerinstance,alist
++ofHookImplinstancesandthekeywordargumentsforthehookcall.
++``after(outcome,hook_name,hook_impls,kwargs)``receivesthe
++sameargumentsas``before``butalsoa:class:`~pluggy.Result`object
++whichrepresentstheresultoftheoverallhookcall.
++"""
+@@ -290,0 +402,3 @@
++"""Enabletracingofhookcalls.
++Returnsanundofunctionwhich,whencalled,removestheaddedtracing.
++"""
+@@ -309,0 +424,3 @@
++"""Returnaproxy:class:`~pluggy.HookCaller`instanceforthenamed
++methodwhichmanagescallstoallregisteredpluginsexcepttheones
++fromremove_plugins."""

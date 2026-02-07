@@ -1,0 +1,73 @@
+--- backup/_callers.py
++++ refactored/_callers.py
+@@ -56,0 +57,47 @@
++def_multicall_call_hookwrapper(
++hook_impl:HookImpl,
++hook_name:str,
++args:Sequence[object],
++teardowns:list[Teardown],
++results:list[object],
++firstresult:bool,
++)->bool:
++function_gen=run_old_style_hookwrapper(hook_impl,hook_name,args)
++next(function_gen)
++teardowns.append(function_gen)
++returnFalse
++def_multicall_call_wrapper(
++hook_impl:HookImpl,
++hook_name:str,
++args:Sequence[object],
++teardowns:list[Teardown],
++results:list[object],
++firstresult:bool,
++)->bool:
++try:
++res=hook_impl.function(*args)
++function_gen=cast(Generator[None,object,object],res)
++next(function_gen)
++teardowns.append(function_gen)
++exceptStopIteration:
++_raise_wrapfail(function_gen,"didnotyield")
++returnFalse
++def_multicall_call_standard(
++hook_impl:HookImpl,
++hook_name:str,
++args:Sequence[object],
++teardowns:list[Teardown],
++results:list[object],
++firstresult:bool,
++)->bool:
++res=hook_impl.function(*args)
++ifresisnotNone:
++results.append(res)
++iffirstresult:
++returnTrue
++returnFalse
++_HOOK_STRATEGIES={
++"hookwrapper":_multicall_call_hookwrapper,
++"wrapper":_multicall_call_wrapper,
++"standard":_multicall_call_standard,
++}
+@@ -79,3 +126 @@
+-function_gen=run_old_style_hookwrapper(hook_impl,hook_name,args)
+-next(function_gen)
+-teardowns.append(function_gen)
++key="hookwrapper"
+@@ -83,7 +128 @@
+-try:
+-res=hook_impl.function(*args)
+-function_gen=cast(Generator[None,object,object],res)
+-next(function_gen)
+-teardowns.append(function_gen)
+-exceptStopIteration:
+-_raise_wrapfail(function_gen,"didnotyield")
++key="wrapper"
+@@ -91,4 +130,4 @@
+-res=hook_impl.function(*args)
+-ifresisnotNone:
+-results.append(res)
+-iffirstresult:
++key="standard"
++if_HOOK_STRATEGIES[key](
++hook_impl,hook_name,args,teardowns,results,firstresult
++):

@@ -1,0 +1,93 @@
+--- backup/_callers.py
++++ refactored/_callers.py
+@@ -56,0 +57,33 @@
++def_get_call_args(
++hook_impl:HookImpl,caller_kwargs:Mapping[str,object]
++)->list[object]:
++try:
++return[caller_kwargs[argname]forargnameinhook_impl.argnames]
++exceptKeyErrorase:
++forargnameinhook_impl.argnames:
++ifargnamenotincaller_kwargs:
++raiseHookCallError(
++f"hookcallmustprovideargument{argname!r}"
++)frome
++return[]
++def_exec_hook_impl(
++hook_impl:HookImpl,
++args:Sequence[object],
++hook_name:str,
++teardowns:list[Teardown],
++)->object|None:
++ifhook_impl.hookwrapper:
++function_gen=run_old_style_hookwrapper(hook_impl,hook_name,args)
++next(function_gen)
++teardowns.append(function_gen)
++returnNone
++ifhook_impl.wrapper:
++res=hook_impl.function(*args)
++function_gen=cast(Generator[None,object,object],res)
++try:
++next(function_gen)
++exceptStopIteration:
++_raise_wrapfail(function_gen,"didnotyield")
++teardowns.append(function_gen)
++returnNone
++returnhook_impl.function(*args)
+@@ -70,22 +103,2 @@
+-try:
+-args=[caller_kwargs[argname]forargnameinhook_impl.argnames]
+-exceptKeyErrorase:
+-forargnameinhook_impl.argnames:
+-ifargnamenotincaller_kwargs:
+-raiseHookCallError(
+-f"hookcallmustprovideargument{argname!r}"
+-)frome
+-ifhook_impl.hookwrapper:
+-function_gen=run_old_style_hookwrapper(hook_impl,hook_name,args)
+-next(function_gen)
+-teardowns.append(function_gen)
+-elifhook_impl.wrapper:
+-try:
+-res=hook_impl.function(*args)
+-function_gen=cast(Generator[None,object,object],res)
+-next(function_gen)
+-teardowns.append(function_gen)
+-exceptStopIteration:
+-_raise_wrapfail(function_gen,"didnotyield")
+-else:
+-res=hook_impl.function(*args)
++args=_get_call_args(hook_impl,caller_kwargs)
++res=_exec_hook_impl(hook_impl,args,hook_name,teardowns)
+
+--- backup/_hooks.py
++++ refactored/_hooks.py
+@@ -255,0 +256,7 @@
++splitpoint=self._find_wrapper_splitpoint()
++ifhookimpl.hookwrapperorhookimpl.wrapper:
++start,end=splitpoint,len(self._hookimpls)
++else:
++start,end=0,splitpoint
++self._insert_hookimpl(hookimpl,start,end)
++def_find_wrapper_splitpoint(self)->int:
+@@ -258,8 +265,3 @@
+-splitpoint=i
+-break
+-else:
+-splitpoint=len(self._hookimpls)
+-ifhookimpl.hookwrapperorhookimpl.wrapper:
+-start,end=splitpoint,len(self._hookimpls)
+-else:
+-start,end=0,splitpoint
++returni
++returnlen(self._hookimpls)
++def_insert_hookimpl(self,hookimpl:HookImpl,start:int,end:int)->None:
+
+--- backup/_manager.py
++++ refactored/_manager.py
+@@ -89,0 +90,3 @@
++self._register_hookimpl(plugin,name,plugin_name)
++returnplugin_name
++def_register_hookimpl(self,plugin:_Plugin,name:str,plugin_name:str)->None:
+@@ -104 +106,0 @@
+-returnplugin_name

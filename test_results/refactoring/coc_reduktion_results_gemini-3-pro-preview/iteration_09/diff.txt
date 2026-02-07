@@ -1,0 +1,79 @@
+--- backup/_callers.py
++++ refactored/_callers.py
+@@ -56,0 +57,22 @@
++def_get_hook_impl_args(
++hook_impl:HookImpl,caller_kwargs:Mapping[str,object]
++)->list[object]:
++try:
++return[caller_kwargs[argname]forargnameinhook_impl.argnames]
++exceptKeyErrorase:
++forargnameinhook_impl.argnames:
++ifargnamenotincaller_kwargs:
++raiseHookCallError(
++f"hookcallmustprovideargument{argname!r}"
++)frome
++raisee
++def_init_wrapper_gen(
++hook_impl:HookImpl,args:Sequence[object]
++)->Generator[None,object,object]:
++res=hook_impl.function(*args)
++gen=cast(Generator[None,object,object],res)
++try:
++next(gen)
++exceptStopIteration:
++_raise_wrapfail(gen,"didnotyield")
++returngen
+@@ -70,8 +92 @@
+-try:
+-args=[caller_kwargs[argname]forargnameinhook_impl.argnames]
+-exceptKeyErrorase:
+-forargnameinhook_impl.argnames:
+-ifargnamenotincaller_kwargs:
+-raiseHookCallError(
+-f"hookcallmustprovideargument{argname!r}"
+-)frome
++args=_get_hook_impl_args(hook_impl,caller_kwargs)
+@@ -83,4 +98 @@
+-try:
+-res=hook_impl.function(*args)
+-function_gen=cast(Generator[None,object,object],res)
+-next(function_gen)
++function_gen=_init_wrapper_gen(hook_impl,args)
+@@ -88,2 +99,0 @@
+-exceptStopIteration:
+-_raise_wrapfail(function_gen,"didnotyield")
+
+--- backup/_hooks.py
++++ refactored/_hooks.py
+@@ -255 +255 @@
+-def_add_hookimpl(self,hookimpl:HookImpl)->None:
++def_find_wrapper_splitpoint(self)->int:
+@@ -258,4 +258,9 @@
+-splitpoint=i
+-break
+-else:
+-splitpoint=len(self._hookimpls)
++returni
++returnlen(self._hookimpls)
++def_insert_hookimpl_default(self,hookimpl:HookImpl,start:int,end:int)->None:
++i=end-1
++whilei>=startandself._hookimpls[i].tryfirst:
++i-=1
++self._hookimpls.insert(i+1,hookimpl)
++def_add_hookimpl(self,hookimpl:HookImpl)->None:
++splitpoint=self._find_wrapper_splitpoint()
+@@ -271,4 +276 @@
+-i=end-1
+-whilei>=startandself._hookimpls[i].tryfirst:
+-i-=1
+-self._hookimpls.insert(i+1,hookimpl)
++self._insert_hookimpl_default(hookimpl,start,end)
+
+--- backup/_manager.py
++++ refactored/_manager.py
+@@ -88,0 +89,3 @@
++self._register_hookimpls(plugin,plugin_name)
++returnplugin_name
++def_register_hookimpls(self,plugin:_Plugin,plugin_name:str)->None:
+@@ -104 +106,0 @@
+-returnplugin_name
