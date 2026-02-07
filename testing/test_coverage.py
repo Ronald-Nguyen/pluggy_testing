@@ -1,23 +1,23 @@
 import unittest
-import types
-import warnings
 from unittest import mock
+import warnings
 
 import pluggy
-from pluggy._callers import _multicall, run_old_style_hookwrapper
-from pluggy._hooks import (
-    HookCaller,
-    HookimplMarker,
-    HookspecMarker,
-    HookImpl,
-    normalize_hookimpl_opts,
-    varnames,
-    HookRelay,
-)
-from pluggy._manager import PluginManager, PluginValidationError
-from pluggy._result import HookCallError, Result
+from pluggy._callers import _multicall
+from pluggy._callers import run_old_style_hookwrapper
+from pluggy._hooks import HookCaller
+from pluggy._hooks import HookImpl
+from pluggy._hooks import HookimplMarker
+from pluggy._hooks import HookspecMarker
+from pluggy._hooks import normalize_hookimpl_opts
+from pluggy._hooks import varnames
+from pluggy._manager import PluginManager
+from pluggy._manager import PluginValidationError
+from pluggy._result import HookCallError
+from pluggy._result import Result
 from pluggy._tracing import TagTracer
-from pluggy._warnings import PluggyWarning, PluggyTeardownRaisedWarning
+from pluggy._warnings import PluggyTeardownRaisedWarning
+from pluggy._warnings import PluggyWarning
 
 
 def _mk_hookimpl(plugin, plugin_name, func, **opts):
@@ -100,7 +100,7 @@ class TestPluggyResult(unittest.TestCase):
             raise ValueError("test")
         except ValueError as e:
             result = Result(None, e)
-        
+
         excinfo = result.excinfo
         self.assertIsNotNone(excinfo)
         self.assertEqual(len(excinfo), 3)
@@ -110,12 +110,12 @@ class TestPluggyResult(unittest.TestCase):
     def test_result_force_exception_sets_traceback(self):
         """Test force_exception sets traceback."""
         result = Result("ok", None)
-        
+
         try:
             raise RuntimeError("test")
         except RuntimeError as e:
             result.force_exception(e)
-        
+
         self.assertIsNotNone(result.exception)
         self.assertIsNotNone(result._traceback)
 
@@ -125,11 +125,12 @@ class TestPluggyResult(unittest.TestCase):
             raise ValueError("test")
         except ValueError as e:
             result = Result(None, e)
-        
+
         try:
             result.get_result()
         except ValueError:
             import traceback
+
             tb_lines = traceback.format_exc()
             self.assertIn("ValueError", tb_lines)
             self.assertIn("test", tb_lines)
@@ -176,62 +177,63 @@ class TestPluggyTracing(unittest.TestCase):
         tracer = TagTracer()
         out = []
         tracer.setwriter(lambda s: out.append(s))
-        
+
         sub = tracer.get("test")
         tracer.indent = 2
         sub("message")
-        
+
         self.assertTrue(any("    " in s for s in out))  # 2 levels of indent
 
     def test_tagtracer_setprocessor_with_tuple(self):
         """Test setprocessor with tuple tags."""
         tracer = TagTracer()
         calls = []
-        
+
         def processor(tags, args):
             calls.append((tags, args))
-        
+
         tracer.setprocessor(("a", "b"), processor)
         sub = tracer.get("a").get("b")
         sub("test")
-        
+
         self.assertEqual(calls[0][0], ("a", "b"))
 
     def test_tagtracer_get_creates_subtracers(self):
         """Test TagTracer.get() creates nested TagTracerSub."""
         tracer = TagTracer()
-        
+
         sub1 = tracer.get("level1")
         self.assertEqual(sub1.tags, ("level1",))
-        
+
         sub2 = sub1.get("level2")
         self.assertEqual(sub2.tags, ("level1", "level2"))
-        
+
         # Both should share the same root
         self.assertIs(sub1.root, sub2.root)
 
     def test_tagtracer_processmessage_without_writer(self):
         """Test _processmessage works without writer."""
         tracer = TagTracer()
-        
+
         calls = []
+
         def processor(tags, args):
             calls.append((tags, args))
-        
+
         tracer.setprocessor("test", processor)
-        
+
         sub = tracer.get("test")
         sub("message")
-        
+
         self.assertEqual(len(calls), 1)
         self.assertEqual(calls[0][0], ("test",))
 
     def test_tagtracer_format_message_without_extra(self):
         """Test _format_message without extra dict."""
         tracer = TagTracer()
-        
+
         msg = tracer._format_message(["tag1", "tag2"], ["arg1", "arg2"])
-        
+
         self.assertIn("arg1 arg2", msg)
         self.assertIn("[tag1:tag2]", msg)
 
@@ -265,15 +267,55 @@ class TestHooksVarNamesAndMarkers(unittest.TestCase):
 
     def test_varnames_callable_with_exception(self):
         """Test varnames handles exceptions when getting __call__."""
+
         class BadCallable:
             def __getattr__(self, name):
                 if name == "__call__":
                     raise RuntimeError("boom")
                 raise AttributeError(name)
-        
+
         args, kwargs = varnames(BadCallable())
         self.assertEqual(args, ())
         self.assertEqual(kwargs, ())
+
+    def test_varnames_class_without_init_attribute(self):
+        """Test varnames handles classes missing __init__."""
+        class NoInitMeta(type):
+            def __getattribute__(cls, name):
+                if name == "__init__":
+                    raise AttributeError("no init")
+                return super().__getattribute__(name)
+
+        class NoInit(metaclass=NoInitMeta):
+            pass
+
+        args, kwargs = varnames(NoInit)
+        self.assertEqual(args, ())
+        self.assertEqual(kwargs, ())
+
+    def test_varnames_signature_typeerror(self):
+        """Test varnames handles inspect.signature TypeError."""
+        args, kwargs = varnames(object())
+        self.assertEqual(args, ())
+        self.assertEqual(kwargs, ())
+
+    def test_varnames_pypy_implicit_obj(self):
+        """Test varnames uses PyPy implicit names when enabled."""
+        import pluggy._hooks as hooks
+
+        original_pypy = hooks._PYPY
+        hooks._PYPY = True
+        try:
+            class C:
+                # Exercise PyPy implicit name handling.
+                def method(self, x):
+                    return x
+
+            args, kwargs = hooks.varnames(C.method)
+            self.assertEqual(args, ("x",))
+            self.assertEqual(kwargs, ())
+        finally:
+            hooks._PYPY = original_pypy
 
     def test_hookspec_marker_sets_opts_and_validates_historic_firstresult(self):
         spec = HookspecMarker("proj")
@@ -287,6 +329,7 @@ class TestHooksVarNamesAndMarkers(unittest.TestCase):
         self.assertFalse(hook.proj_spec["firstresult"])
 
         with self.assertRaises(ValueError):
+
             @spec(firstresult=True, historic=True)
             def bad(x):  # noqa
                 return x
@@ -321,23 +364,23 @@ class TestHooksVarNamesAndMarkers(unittest.TestCase):
         """Test HookspecMarker and HookimplMarker as decorator factories."""
         spec = HookspecMarker("proj")
         impl = HookimplMarker("proj")
-        
+
         # Use as decorator factory
         decorator = spec(firstresult=True)
-        
+
         def h(x):
             return x
-        
+
         decorated = decorator(h)
         self.assertTrue(hasattr(decorated, "proj_spec"))
         self.assertTrue(decorated.proj_spec["firstresult"])
-        
+
         # Same for impl
         impl_decorator = impl(tryfirst=True)
-        
+
         def impl_h(x):
             return x
-        
+
         impl_decorated = impl_decorator(impl_h)
         self.assertTrue(hasattr(impl_decorated, "proj_impl"))
         self.assertTrue(impl_decorated.proj_impl["tryfirst"])
@@ -379,15 +422,16 @@ class TestCallersMulticall(unittest.TestCase):
 
     def test_multicall_firstresult_with_none_results(self):
         """Test firstresult returns None when no non-None results."""
+
         def impl1(x):
             return None
-        
+
         def impl2(x):
             return None
-        
+
         hi1 = self._mk_hookimpl(object(), "p1", impl1)
         hi2 = self._mk_hookimpl(object(), "p2", impl2)
-        
+
         result = _multicall("h", [hi1, hi2], {"x": 1}, firstresult=True)
         self.assertIsNone(result)
 
@@ -424,7 +468,9 @@ class TestCallersMulticall(unittest.TestCase):
             warnings.simplefilter("always")
             with self.assertRaises(RuntimeError):
                 gen.send("ok")
-            self.assertTrue(any(isinstance(i.message, PluggyTeardownRaisedWarning) for i in w))
+            self.assertTrue(
+                any(isinstance(i.message, PluggyTeardownRaisedWarning) for i in w)
+            )
 
     def test_multicall_wrapper_stopiteration_did_not_yield(self):
         def wrapper(x):
@@ -460,7 +506,9 @@ class TestHookCallerBehavior(unittest.TestCase):
         pm.register(p1)
 
         calls = []
-        pm.hook.myhook.call_historic(result_callback=lambda r: calls.append(r), kwargs={"x": 10})
+        pm.hook.myhook.call_historic(
+            result_callback=lambda r: calls.append(r), kwargs={"x": 10}
+        )
         self.assertEqual(calls, [11])
 
         # Apply history to a newly registered implementation
@@ -503,6 +551,12 @@ class TestHookCallerBehavior(unittest.TestCase):
         # call_extra should insert extra before wrappers/tryfirsts etc and still obey firstresult
         res = pm.hook.h.call_extra([extra], {"x": 1})
         self.assertEqual(res, "extra")
+
+    def test_hookcaller_remove_plugin_missing_raises(self):
+        hook = HookCaller("h", lambda *args, **kwargs: None)
+        hook._add_hookimpl(_mk_hookimpl(object(), "p", lambda: None))
+        with self.assertRaises(ValueError):
+            hook._remove_plugin(object())
 
     def test_subset_hook_caller(self):
         pm = PluginManager("proj")
@@ -594,14 +648,32 @@ class TestPluginManager(unittest.TestCase):
     def test_hookimpl_opts_non_dict_returns_none(self):
         """Test parse_hookimpl_opts returns None for non-dict marker."""
         pm = PluginManager("proj")
-        
+
         class P:
             def f(self):
                 pass
+
             f.proj_impl = "not a dict"
-        
+
         result = pm.parse_hookimpl_opts(P(), "f")
         self.assertIsNone(result)
+
+    def test_parse_hookimpl_opts_getattr_exception(self):
+        pm = PluginManager("proj")
+
+        class BadMethod:
+            def __getattr__(self, name):
+                raise RuntimeError("boom")
+
+            def __call__(self):
+                return None
+
+        class P:
+            bad = BadMethod()
+
+        with mock.patch("pluggy._manager.inspect.isroutine", return_value=True):
+            result = pm.parse_hookimpl_opts(P(), "bad")
+        self.assertEqual(result, {})
 
     def test_verify_hook_errors(self):
         pm = PluginManager("proj")
@@ -845,7 +917,7 @@ class TestPluginManager(unittest.TestCase):
             pass
 
         my_warning = UserWarning("test warning")
-        
+
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             _warn_for_function(my_warning, my_func)
@@ -902,12 +974,14 @@ class TestPluginManager(unittest.TestCase):
             warnings.simplefilter("always")
             pm.register(P())
             # Should have triggered the argument warning
-            self.assertTrue(any("Argument x is deprecated" in str(warning.message) for warning in w))
+            self.assertTrue(
+                any("Argument x is deprecated" in str(warning.message) for warning in w)
+            )
 
     def test_distfacade_properties(self):
         """Test DistFacade wrapper for distribution metadata."""
         from pluggy._manager import DistFacade
-        
+
         class MockDist:
             def __init__(self):
                 self.metadata = {"name": "test-package"}
@@ -998,6 +1072,7 @@ class TestPluginManager(unittest.TestCase):
 
     def test_multicall_wrapper_teardown_exception_continues(self):
         """Test that exceptions in teardown are propagated."""
+
         def impl(x):
             return "result"
 
@@ -1006,44 +1081,88 @@ class TestPluginManager(unittest.TestCase):
             raise ValueError("teardown error")
 
         hi_impl = _mk_hookimpl(object(), "impl", impl)
-        hi_wrapper = _mk_hookimpl(object(), "wrapper", wrapper_raises_in_teardown, wrapper=True)
+        hi_wrapper = _mk_hookimpl(
+            object(), "wrapper", wrapper_raises_in_teardown, wrapper=True
+        )
 
         with self.assertRaises(ValueError):
             _multicall("h", [hi_wrapper, hi_impl], {"x": 1}, firstresult=False)
 
     def test_multicall_wrapper_teardown_continues_on_stopiteration(self):
         """Test that StopIteration in teardown updates result and continues."""
+
         def impl(x):
             return "result"
 
+        yielded_values = []  # Capture values sent into the wrapper for assertions.
         def wrapper_with_return_value(x):
-            res = yield
+            # Capture values sent into the wrapper.
+            yielded_values.append((yield))
             # Return a new value
             return "new_value"
 
         hi_impl = _mk_hookimpl(object(), "impl", impl)
-        hi_wrapper = _mk_hookimpl(object(), "wrapper", wrapper_with_return_value, wrapper=True)
+        hi_wrapper = _mk_hookimpl(
+            object(), "wrapper", wrapper_with_return_value, wrapper=True
+        )
 
         result = _multicall("h", [hi_wrapper, hi_impl], {"x": 1}, firstresult=False)
         # The wrapper returns a value, which becomes the result
         self.assertEqual(result, "new_value")
+        self.assertEqual(yielded_values, [["result"]])
 
     def test_multicall_wrapper_returns_value_via_stopiteration(self):
         """Test wrapper returning value which creates StopIteration with value."""
+
         def impl(x):
             return "impl_result"
-        
+
+        yielded_values = []  # Capture values sent into the wrapper for assertions.
         def wrapper_returns(x):
-            outcome = yield
+            # Capture values sent into the wrapper.
+            yielded_values.append((yield))
             # Return a new value
             return "wrapper_override"
-        
+
         hi_impl = _mk_hookimpl(object(), "impl", impl)
         hi_wrapper = _mk_hookimpl(object(), "wrapper", wrapper_returns, wrapper=True)
-        
+
         result = _multicall("h", [hi_wrapper, hi_impl], {"x": 1}, firstresult=False)
         # Wrapper's return value should override
         self.assertEqual(result, "wrapper_override")
+        self.assertEqual(yielded_values, [["impl_result"]])
+
+
+class TestCoverageReloads(unittest.TestCase):
+    def test_reload_modules_for_full_coverage(self):
+        import runpy
+        import typing
+        import pluggy
+        from pluggy import _callers, _hooks, _manager, _result, _tracing, _warnings
+
+        def run_module_path(module, run_name):
+            """Re-execute module initialization via runpy for coverage.
+
+            Args:
+                module: Imported module object to execute.
+                run_name: Name used for __name__/__package__ during execution.
+            """
+            runpy.run_path(module.__file__, run_name=run_name)
+
+        original_type_checking = typing.TYPE_CHECKING
+        try:
+            typing.TYPE_CHECKING = True
+            run_module_path(_hooks, "pluggy._hooks_typechecking")
+            run_module_path(_manager, "pluggy._manager_typechecking")
+        finally:
+            typing.TYPE_CHECKING = original_type_checking
+
+        run_module_path(_callers, "pluggy._callers_coverage")
+        run_module_path(_result, "pluggy._result_coverage")
+        run_module_path(_tracing, "pluggy._tracing_coverage")
+        run_module_path(_warnings, "pluggy._warnings_coverage")
+        runpy.run_path(pluggy.__file__, run_name="pluggy._coverage")
+
 
 if __name__ == "__main__":
     unittest.main()
