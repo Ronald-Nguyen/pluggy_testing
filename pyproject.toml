@@ -130,3 +130,15 @@ warn_return_any = true
 warn_unreachable = true
 warn_unused_configs = true
 warn_unused_ignores = true
+
+[tool.coverage.run]
+omit = [
+    "*/testing/*",
+    "testing/*"
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == '__main__':"
+]
