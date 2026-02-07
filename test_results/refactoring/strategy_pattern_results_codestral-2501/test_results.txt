@@ -1,0 +1,10 @@
+iteration 1 test failed diff passed
+iteration 2 test failed diff passed
+iteration 3 test passed diff passed
+iteration 4 test failed diff passed
+iteration 5 test failed diff passed
+iteration 6 test failed diff passed
+iteration 7 test failed diff passed
+iteration 8 test failed diff passed
+iteration 9 test failed diff passed
+iteration 10 test passed diff passed

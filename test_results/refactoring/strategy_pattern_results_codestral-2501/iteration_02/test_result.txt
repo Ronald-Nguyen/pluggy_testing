@@ -1,0 +1,39 @@
+TEST_STATUS: FAILURE
+DIFF_STATUS: SUCCESS
+RETURNCODE: 1
+TIMESTAMP: 2026-02-08T00:06:15.175536
+
+=== PYTEST STDOUT ===
+
+
+=== PYTEST STDERR ===
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\ronal\AppData\Local\Programs\Python\Python314\Scripts\pytest.exe\__main__.py", line 6, in <module>
+    sys.exit(console_main())
+             ~~~~~~~~~~~~^^
+  File "C:\Users\ronal\AppData\Local\Programs\Python\Python314\Lib\site-packages\_pytest\config\__init__.py", line 223, in console_main
+    code = main()
+  File "C:\Users\ronal\AppData\Local\Programs\Python\Python314\Lib\site-packages\_pytest\config\__init__.py", line 193, in main
+    config = _prepareconfig(new_args, plugins)
+  File "C:\Users\ronal\AppData\Local\Programs\Python\Python314\Lib\site-packages\_pytest\config\__init__.py", line 361, in _prepareconfig
+    config: Config = pluginmanager.hook.pytest_cmdline_parse(
+                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        pluginmanager=pluginmanager, args=args
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\ronal\pluggy_testing\src\pluggy\_hooks.py", line 378, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ronal\pluggy_testing\src\pluggy\_manager.py", line 85, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ronal\pluggy_testing\src\pluggy\_callers.py", line 188, in _multicall
+    raise exception
+  File "C:\Users\ronal\AppData\Local\Programs\Python\Python314\Lib\site-packages\_pytest\helpconfig.py", line 124, in pytest_cmdline_parse
+    config = yield
+             ^^^^^
+StopIteration
+

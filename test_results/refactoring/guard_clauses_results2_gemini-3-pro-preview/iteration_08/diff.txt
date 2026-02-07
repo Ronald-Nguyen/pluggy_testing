@@ -1,0 +1,14 @@
+--- backup/_manager.py
++++ refactored/_manager.py
+@@ -91 +91,2 @@
+-ifhookimpl_optsisnotNone:
++ifhookimpl_optsisNone:
++continue
+@@ -233 +234,2 @@
+-ifnothook.has_spec():
++ifhook.has_spec():
++continue
+@@ -235 +237,2 @@
+-ifnothookimpl.optionalhook:
++ifhookimpl.optionalhook:
++continue

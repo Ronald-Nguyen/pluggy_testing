@@ -1,0 +1,77 @@
+--- backup/_callers.py
++++ refactored/_callers.py
+@@ -56,0 +57,50 @@
++def_strategy_hookwrapper(
++hook_impl:HookImpl,
++hook_name:str,
++args:Sequence[object],
++teardowns:list[Teardown],
++results:list[object],
++firstresult:bool,
++exception:BaseException|None
++)->tuple[list[object],list[Teardown],BaseException|None]:
++function_gen=run_old_style_hookwrapper(hook_impl,hook_name,args)
++next(function_gen)
++teardowns.append(function_gen)
++returnresults,teardowns,exception
++def_strategy_wrapper(
++hook_impl:HookImpl,
++hook_name:str,
++args:Sequence[object],
++teardowns:list[Teardown],
++results:list[object],
++firstresult:bool,
++exception:BaseException|None
++)->tuple[list[object],list[Teardown],BaseException|None]:
++try:
++res=hook_impl.function(*args)
++function_gen=cast(Generator[None,object,object],res)
++next(function_gen)
++teardowns.append(function_gen)
++exceptStopIteration:
++_raise_wrapfail(function_gen,"didnotyield")
++returnresults,teardowns,exception
++def_strategy_regular(
++hook_impl:HookImpl,
++hook_name:str,
++args:Sequence[object],
++teardowns:list[Teardown],
++results:list[object],
++firstresult:bool,
++exception:BaseException|None
++)->tuple[list[object],list[Teardown],BaseException|None]:
++res=hook_impl.function(*args)
++ifresisnotNone:
++results.append(res)
++iffirstresult:
++exception=StopIteration()
++returnresults,teardowns,exception
++HOOK_STRATEGIES={
++'hookwrapper':_strategy_hookwrapper,
++'wrapper':_strategy_wrapper,
++'regular':_strategy_regular
++}
+@@ -79,3 +129 @@
+-function_gen=run_old_style_hookwrapper(hook_impl,hook_name,args)
+-next(function_gen)
+-teardowns.append(function_gen)
++strategy='hookwrapper'
+@@ -83,7 +131 @@
+-try:
+-res=hook_impl.function(*args)
+-function_gen=cast(Generator[None,object,object],res)
+-next(function_gen)
+-teardowns.append(function_gen)
+-exceptStopIteration:
+-_raise_wrapfail(function_gen,"didnotyield")
++strategy='wrapper'
+@@ -91,4 +133,5 @@
+-res=hook_impl.function(*args)
+-ifresisnotNone:
+-results.append(res)
+-iffirstresult:
++strategy='regular'
++results,teardowns,exception=HOOK_STRATEGIES[strategy](
++hook_impl,hook_name,args,teardowns,results,firstresult,exception
++)
++ifexceptionisnotNoneandisinstance(exception,StopIteration):

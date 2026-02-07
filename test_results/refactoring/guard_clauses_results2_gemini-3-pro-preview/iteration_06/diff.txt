@@ -1,0 +1,20 @@
+--- backup/_callers.py
++++ refactored/_callers.py
+@@ -82 +82,2 @@
+-elifhook_impl.wrapper:
++continue
++ifhook_impl.wrapper:
+@@ -90 +91 @@
+-else:
++continue
+@@ -92 +93,2 @@
+-ifresisnotNone:
++ifresisNone:
++continue
+
+--- backup/_manager.py
++++ refactored/_manager.py
+@@ -91 +91,2 @@
+-ifhookimpl_optsisnotNone:
++ifhookimpl_optsisNone:
++continue

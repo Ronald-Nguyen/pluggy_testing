@@ -1,17 +1,20 @@
 import argparse
 import os
+import re
 import shutil
 import subprocess
+import difflib
 from datetime import datetime
 from pathlib import Path
 
 PROJECT_SRC_PATH = Path("src/pluggy")
-REFACTORED_ROOT_PATH = Path("inline_")
-TEST_RESULTS_ROOT = Path("test_results")
+REFACTORED_ROOT_PATH = Path("refactoring/strategy_pattern_results_codestral-2501")
+TEST_RESULTS_ROOT = Path("test_results") / REFACTORED_ROOT_PATH
 
 ITERATION_PREFIX = "iteration_"
 SUMMARY_FILENAME = "test_results.txt"
 ITERATION_RESULT_FILENAME = "test_result.txt"
+ITERATION_DIFF_FILENAME = "diff.txt"
 
 
 def get_project_structure(project_dir: Path) -> str:
@@ -90,18 +93,18 @@ def run_pytest():
     """Führt pytest aus und gibt das Ergebnis zurück."""
     try:
         result = subprocess.run(
-            ['pytest'], 
-            capture_output=True, 
-            text=True, 
+            ["pytest"],
+            capture_output=True,
+            text=True,
         )
         return {
-            'success': result.returncode == 0,
-            'stdout': result.stdout,
-            'stderr': result.stderr,
-            'returncode': result.returncode
+            "success": result.returncode == 0,
+            "stdout": result.stdout,
+            "stderr": result.stderr,
+            "returncode": result.returncode,
         }
     except Exception as e:
-        return {'success': False, 'stdout': '', 'stderr': str(e), 'returncode': -1}
+        return {"success": False, "stdout": "", "stderr": str(e), "returncode": -1}
 
 
 def write_text_file(path: Path, content: str) -> None:
@@ -124,17 +127,25 @@ def parse_iteration_label(iteration_dir_name: str) -> str:
     return iteration_dir_name.replace("_", " ")
 
 
-def format_summary_line(iteration_dir_name: str, success: bool) -> str:
+def format_summary_line(iteration_dir_name: str, test_success: bool, diff_has_changes: bool) -> str:
     label = parse_iteration_label(iteration_dir_name)
-    return f"{label} {'passed' if success else 'failed'}"
+    test_part = "test passed" if test_success else "test failed"
+    diff_part = "diff passed" if diff_has_changes else "diff failed"
+    return f"{label} {test_part} {diff_part}"
 
 
-def save_iteration_single_file(
-    result_dir: Path, test_result: dict[str, object], status: str, note: str | None = None
+def save_iteration_result_files(
+    result_dir: Path,
+    test_result: dict[str, object],
+    test_status: str,
+    diff_status: str,
+    diff_text: str,
+    note: str | None = None,
 ) -> None:
     """
-    Ensures each iteration folder contains ONLY ONE file: test_result.txt
-    The file contains the exact stdout/stderr/returncode plus a status line (and optional note).
+    Ensures each iteration folder contains:
+    - test_result.txt (test stdout/stderr/returncode + statuses)
+    - diff.txt (only diffs, or "(no diff)")
     """
     if result_dir.exists():
         shutil.rmtree(result_dir)
@@ -145,12 +156,15 @@ def save_iteration_single_file(
     returncode = str(test_result.get("returncode", ""))
 
     parts: list[str] = []
-    parts.append(f"STATUS: {status}")
+    parts.append(f"TEST_STATUS: {test_status}")
+    parts.append(f"DIFF_STATUS: {diff_status}")
     parts.append(f"RETURNCODE: {returncode}")
     parts.append(f"TIMESTAMP: {datetime.now().isoformat()}")
+
     if note:
         parts.append("")
         parts.append(f"NOTE: {note}")
+
     parts.append("")
     parts.append("=== PYTEST STDOUT ===")
     parts.append(stdout)
@@ -160,6 +174,11 @@ def save_iteration_single_file(
     parts.append("")
 
     write_text_file(result_dir / ITERATION_RESULT_FILENAME, "\n".join(parts))
+
+    write_text_file(
+        result_dir / ITERATION_DIFF_FILENAME,
+        diff_text if diff_text else "(no diff)\n",
+    )
 
 
 def should_skip_snapshot_path(relative_path: Path) -> bool:
@@ -207,14 +226,79 @@ def ensure_within_root(root: Path, target: Path) -> Path:
     return target_resolved
 
 
-def resolve_pytest_cwd(project_src: Path) -> Path:
-    if (project_src / "pyproject.toml").exists() or (project_src / "tox.ini").exists():
-        return project_src
-    if (project_src.parent / "pyproject.toml").exists() or (
-        project_src.parent / "tox.ini"
-    ).exists():
-        return project_src.parent
-    return project_src
+def _read_text_best_effort(path: Path) -> str:
+    try:
+        return path.read_text(encoding="utf-8")
+    except Exception:
+        try:
+            return path.read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            return ""
+
+
+def _normalize_lines_ignore_whitespace_and_blanklines(text: str) -> list[str]:
+    """
+    - ignores line breaks by comparing line lists
+    - ignores whitespace-only changes by removing all whitespace in each line
+    - ignores blank/whitespace-only lines entirely
+    """
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
+    out: list[str] = []
+    for line in text.split("\n"):
+        normalized = re.sub(r"\s+", "", line)
+        if normalized == "":
+            continue
+        out.append(normalized)
+    return out
+
+
+def build_diff_between_backup_and_refactored(
+    backup_dir: Path,
+    project_src: Path,
+    snapshot_files: dict[str, str],
+) -> tuple[bool, str]:
+    """
+    Returns (has_changes, diff_text).
+    - has_changes True if there is at least one meaningful diff (ignoring whitespace/linebreak changes).
+    - diff_text contains unified diffs for each changed file.
+    """
+    diffs: list[str] = []
+    has_changes = False
+
+    rel_paths = sorted({str(Path(p)) for p in snapshot_files.keys()})
+    for rel in rel_paths:
+        rel_path = Path(rel)
+
+        if any(part == "tests" for part in rel_path.parts):
+            continue
+
+        orig_path = backup_dir / rel_path
+        new_path = project_src / rel_path
+
+        orig_text = _read_text_best_effort(orig_path) if orig_path.exists() else ""
+        new_text = _read_text_best_effort(new_path) if new_path.exists() else ""
+
+        orig_norm = _normalize_lines_ignore_whitespace_and_blanklines(orig_text)
+        new_norm = _normalize_lines_ignore_whitespace_and_blanklines(new_text)
+
+        if orig_norm == new_norm:
+            continue
+
+        has_changes = True
+        diff_lines = list(
+            difflib.unified_diff(
+                orig_norm,
+                new_norm,
+                fromfile=f"backup/{rel}",
+                tofile=f"refactored/{rel}",
+                lineterm="",
+                n=0,
+            )
+        )
+        if diff_lines:
+            diffs.append("\n".join(diff_lines))
+
+    return has_changes, ("\n\n".join(diffs)).strip()
 
 
 def process_iteration(
@@ -222,43 +306,70 @@ def process_iteration(
     project_src: Path,
     results_root: Path,
     backup_dir: Path,
-) -> tuple[bool, str]:
+) -> tuple[bool, bool, str]:
     code_dir = iteration_dir / "code"
     result_dir = ensure_within_root(results_root, results_root / iteration_dir.name)
 
     if not code_dir.exists():
         test_result = {"stdout": "", "stderr": "", "returncode": -1, "success": False}
-        save_iteration_single_file(
+        diff_has_changes = False
+        test_status = "FAILURE"
+        diff_status = "SUCCESS" if diff_has_changes else "FAILURE"
+        save_iteration_result_files(
             result_dir,
             test_result,
-            "FAILURE",
+            test_status,
+            diff_status,
+            "",
             note=f"Code-Verzeichnis fehlt: {code_dir}",
         )
-        return False, format_summary_line(iteration_dir.name, False)
+        return False, diff_has_changes, format_summary_line(iteration_dir.name, False, diff_has_changes)
 
     snapshot_files = collect_snapshot_files(code_dir)
     if not snapshot_files:
         test_result = {"stdout": "", "stderr": "", "returncode": -1, "success": False}
-        save_iteration_single_file(
+        diff_has_changes = False
+        test_status = "FAILURE"
+        diff_status = "SUCCESS" if diff_has_changes else "FAILURE"
+        save_iteration_result_files(
             result_dir,
             test_result,
-            "FAILURE",
+            test_status,
+            diff_status,
+            "",
             note=f"Keine Python-Dateien in {code_dir}",
         )
-        return False, format_summary_line(iteration_dir.name, False)
+        return False, diff_has_changes, format_summary_line(iteration_dir.name, False, diff_has_changes)
 
     backup_project(project_src, backup_dir)
+
+    diff_has_changes = False
+    diff_text = ""
     try:
         apply_changes(project_src, snapshot_files)
+        diff_has_changes, diff_text = build_diff_between_backup_and_refactored(
+            backup_dir=backup_dir, project_src=project_src, snapshot_files=snapshot_files
+        )
         test_result = run_pytest()
     finally:
         restore_project(backup_dir, project_src)
 
-    success = bool(test_result.get("success"))
-    status = "SUCCESS" if success else "FAILURE"
-    print(f"{iteration_dir.name}: {status}")
-    save_iteration_single_file(result_dir, test_result, status)
-    return success, format_summary_line(iteration_dir.name, success)
+    test_success = bool(test_result.get("success"))
+    test_status = "SUCCESS" if test_success else "FAILURE"
+
+    diff_status = "SUCCESS" if diff_has_changes else "FAILURE"
+
+    print(f"{iteration_dir.name}: TEST={test_status} DIFF={diff_status}")
+
+    save_iteration_result_files(
+        result_dir,
+        test_result,
+        test_status,
+        diff_status,
+        diff_text,
+    )
+
+    return test_success, diff_has_changes, format_summary_line(iteration_dir.name, test_success, diff_has_changes)
 
 
 def parse_args() -> argparse.Namespace:
@@ -303,13 +414,17 @@ def main() -> None:
 
     summary_lines: list[str] = []
     for iteration_dir in iteration_dirs:
-        _success, line = process_iteration(iteration_dir, project_src, results_root, backup_dir)
+        _test_success, _diff_has_changes, line = process_iteration(
+            iteration_dir, project_src, results_root, backup_dir
+        )
         summary_lines.append(line)
 
     write_text_file(
         ensure_within_root(results_root, results_root / SUMMARY_FILENAME),
         "\n".join(summary_lines) + "\n",
     )
+
+    print(f"\nZusammenfassung:\n{chr(10).join(summary_lines)}")
 
 
 if __name__ == "__main__":
