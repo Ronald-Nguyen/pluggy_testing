@@ -6,7 +6,7 @@ from datetime import datetime
 from pathlib import Path
 
 PROJECT_SRC_PATH = Path("src/pluggy")
-REFACTORED_ROOT_PATH = Path("inline_variable_results_gemini-3-pro-preview")
+REFACTORED_ROOT_PATH = Path("inline_")
 TEST_RESULTS_ROOT = Path("test_results")
 
 ITERATION_PREFIX = "iteration_"
@@ -256,6 +256,7 @@ def process_iteration(
 
     success = bool(test_result.get("success"))
     status = "SUCCESS" if success else "FAILURE"
+    print(f"{iteration_dir.name}: {status}")
     save_iteration_single_file(result_dir, test_result, status)
     return success, format_summary_line(iteration_dir.name, success)
 
