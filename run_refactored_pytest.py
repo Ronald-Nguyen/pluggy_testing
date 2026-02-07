@@ -7,7 +7,7 @@ from pathlib import Path
 
 PROJECT_SRC_PATH = Path("src/pluggy")
 REFACTORED_ROOT_PATH = Path("inline_variable_results_gemini-3-pro-preview")
-TEST_RESULTS_ROOT = Path("test_results") / REFACTORED_ROOT_PATH
+TEST_RESULTS_ROOT = Path("test_results")
 
 ITERATION_PREFIX = "iteration_"
 SUMMARY_FILENAME = "test_results.txt"
@@ -86,22 +86,24 @@ def apply_changes(project_dir: Path | str, files: dict[str, str]) -> None:
             print(f" Fehler beim Schreiben von {filename}: {e}")
 
 
-def run_pytest():
+def run_pytest(cwd: Path, env: dict[str, str] | None = None) -> dict[str, object]:
     """Führt pytest aus und gibt das Ergebnis zurück."""
     try:
         result = subprocess.run(
-            ['pytest'], 
-            capture_output=True, 
-            text=True, 
+            ["pytest"],
+            capture_output=True,
+            text=True,
+            cwd=str(cwd),
+            env=env,
         )
         return {
-            'success': result.returncode == 0,
-            'stdout': result.stdout,
-            'stderr': result.stderr,
-            'returncode': result.returncode
+            "success": result.returncode == 0,
+            "stdout": result.stdout,
+            "stderr": result.stderr,
+            "returncode": result.returncode,
         }
     except Exception as e:
-        return {'success': False, 'stdout': '', 'stderr': str(e), 'returncode': -1}
+        return {"success": False, "stdout": "", "stderr": str(e), "returncode": -1}
 
 
 def write_text_file(path: Path, content: str) -> None:
@@ -250,7 +252,8 @@ def process_iteration(
     backup_project(project_src, backup_dir)
     try:
         apply_changes(project_src, snapshot_files)
-        test_result = run_pytest()
+        pytest_cwd = resolve_pytest_cwd(project_src)
+        test_result = run_pytest(pytest_cwd)
     finally:
         restore_project(backup_dir, project_src)
 
