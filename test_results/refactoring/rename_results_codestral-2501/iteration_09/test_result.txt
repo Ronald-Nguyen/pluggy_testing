@@ -1,0 +1,450 @@
+TEST_STATUS: FAILURE
+DIFF_STATUS: SUCCESS
+RETURNCODE: 1
+TIMESTAMP: 2026-02-08T20:38:39.959603
+
+=== PYTEST STDOUT ===
+============================= test session starts =============================
+platform win32 -- Python 3.14.2, pytest-9.0.2, pluggy-0.1.dev945+g0cf9e32a7.d20260207
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\Users\ronal\pluggy_testing
+configfile: tox.ini
+testpaths: testing
+plugins: anyio-4.12.1, hypothesis-6.148.8, benchmark-5.2.3, cov-7.0.0
+collected 202 items
+
+testing\test_coverage.py ............................................... [  7%]
+........................................................................ [ 19%]
+........................................................................ [ 31%]
+.......                                                                  [ 32%]
+testing\test_details.py ..............................                   [ 37%]
+testing\test_helpers.py ..................                               [ 40%]
+testing\test_hookcaller.py ....F..F..F........F..F...................... [ 48%]
+...................F.                                                    [ 51%]
+testing\test_invocations.py ............................................ [ 58%]
+.                                                                        [ 58%]
+testing\test_multicall.py .............................................. [ 66%]
+..........................                                               [ 70%]
+testing\test_pluginmanager.py .......................................... [ 77%]
+...................................................................F..F. [ 89%]
+.........                                                                [ 91%]
+testing\test_refactoring.py .......F............................         [ 97%]
+testing\test_result.py ...                                               [ 97%]
+testing\test_tracer.py ............                                      [ 99%]
+testing\test_warnings.py ...                                             [100%]
+
+================================== FAILURES ===================================
+_______________________ test_adding_nonwrappers_trylast _______________________
+
+hc = <HookCaller 'he_method1'>
+addmeth = <test_hookcaller.AddMeth object at 0x0000020CF3905090>
+
+    def test_adding_nonwrappers_trylast(hc: HookCaller, addmeth: AddMeth) -> None:
+        @addmeth()
+        def he_method1_middle() -> None:
+            pass
+    
+        @addmeth(trylast=True)
+        def he_method1() -> None:
+            pass
+    
+        @addmeth()
+        def he_method1_b() -> None:
+            pass
+    
+>       assert funcs(hc.get_hookimpls()) == [he_method1, he_method1_middle, he_method1_b]
+E       assert [<function te...020CF3B21C70>] == [<function te...020CF3B21C70>]
+E         
+E         At index 0 diff: <function test_adding_nonwrappers_trylast.<locals>.he_method1_middle at 0x0000020CF3B219B0> != <function test_adding_nonwrappers_trylast.<locals>.he_method1 at 0x0000020CF3B21B10>
+E         Use -v to get more diff
+
+testing\test_hookcaller.py:98: AssertionError
+______________________ test_adding_nonwrappers_trylast3 _______________________
+
+hc = <HookCaller 'he_method1'>
+addmeth = <test_hookcaller.AddMeth object at 0x0000020CF39056D0>
+
+    def test_adding_nonwrappers_trylast3(hc: HookCaller, addmeth: AddMeth) -> None:
+        @addmeth()
+        def he_method1_a() -> None:
+            pass
+    
+        @addmeth(trylast=True)
+        def he_method1_b() -> None:
+            pass
+    
+        @addmeth()
+        def he_method1_c() -> None:
+            pass
+    
+        @addmeth(trylast=True)
+        def he_method1_d() -> None:
+            pass
+    
+>       assert funcs(hc.get_hookimpls()) == [
+            he_method1_d,
+            he_method1_b,
+            he_method1_a,
+            he_method1_c,
+        ]
+E       assert [<function te...020CF3B41430>] == [<function te...020CF3B417A0>]
+E         
+E         At index 0 diff: <function test_adding_nonwrappers_trylast3.<locals>.he_method1_a at 0x0000020CF3B41E80> != <function test_adding_nonwrappers_trylast3.<locals>.he_method1_d at 0x0000020CF3B41430>
+E         Use -v to get more diff
+
+testing\test_hookcaller.py:118: AssertionError
+______________________ test_adding_nonwrappers_trylast2 _______________________
+
+hc = <HookCaller 'he_method1'>
+addmeth = <test_hookcaller.AddMeth object at 0x0000020CF3B48B00>
+
+    def test_adding_nonwrappers_trylast2(hc: HookCaller, addmeth: AddMeth) -> None:
+        @addmeth()
+        def he_method1_middle() -> None:
+            pass
+    
+        @addmeth()
+        def he_method1_b() -> None:
+            pass
+    
+        @addmeth(trylast=True)
+        def he_method1() -> None:
+            pass
+    
+>       assert funcs(hc.get_hookimpls()) == [he_method1, he_method1_middle, he_method1_b]
+E       assert [<function te...020CF3B40BF0>] == [<function te...020CF3B40B40>]
+E         
+E         At index 0 diff: <function test_adding_nonwrappers_trylast2.<locals>.he_method1_middle at 0x0000020CF3B40E00> != <function test_adding_nonwrappers_trylast2.<locals>.he_method1 at 0x0000020CF3B40BF0>
+E         Use -v to get more diff
+
+testing\test_hookcaller.py:139: AssertionError
+___________________ test_adding_wrappers_ordering_tryfirst ____________________
+
+hc = <HookCaller 'he_method1'>
+addmeth = <test_hookcaller.AddMeth object at 0x0000020CF3A21F20>
+
+    def test_adding_wrappers_ordering_tryfirst(hc: HookCaller, addmeth: AddMeth) -> None:
+        @addmeth(hookwrapper=True, tryfirst=True)
+        def he_method1():
+            yield  # pragma: no cover
+    
+        @addmeth(hookwrapper=True)
+        def he_method2():
+            yield  # pragma: no cover
+    
+        @addmeth(wrapper=True, tryfirst=True)
+        def he_method3():
+            yield  # pragma: no cover
+    
+>       assert funcs(hc.get_hookimpls()) == [he_method2, he_method1, he_method3]
+E       assert [<function te...020CF3B2F3D0>] == [<function te...020CF3B2F270>]
+E         
+E         At index 0 diff: <function test_adding_wrappers_ordering_tryfirst.<locals>.he_method3 at 0x0000020CF3B2F270> != <function test_adding_wrappers_ordering_tryfirst.<locals>.he_method2 at 0x0000020CF3B2F320>
+E         Use -v to get more diff
+
+testing\test_hookcaller.py:201: AssertionError
+________________________ test_adding_wrappers_complex _________________________
+
+hc = <HookCaller 'he_method1'>
+addmeth = <test_hookcaller.AddMeth object at 0x0000020CF3A22580>
+
+    def test_adding_wrappers_complex(hc: HookCaller, addmeth: AddMeth) -> None:
+        assert funcs(hc.get_hookimpls()) == []
+    
+        @addmeth(hookwrapper=True, trylast=True)
+        def m1():
+            yield  # pragma: no cover
+    
+        assert funcs(hc.get_hookimpls()) == [m1]
+    
+        @addmeth()
+        def m2() -> None: ...
+    
+        assert funcs(hc.get_hookimpls()) == [m2, m1]
+    
+        @addmeth(trylast=True)
+        def m3() -> None: ...
+    
+>       assert funcs(hc.get_hookimpls()) == [m3, m2, m1]
+E       assert [<function te...020CF3B2FD70>] == [<function te...020CF3B2FD70>]
+E         
+E         At index 0 diff: <function test_adding_wrappers_complex.<locals>.m2 at 0x0000020CF3B2FAB0> != <function test_adding_wrappers_complex.<locals>.m3 at 0x0000020CF3B2F7F0>
+E         Use -v to get more diff
+
+testing\test_hookcaller.py:221: AssertionError
+_________________________ test_call_extra_hook_order __________________________
+
+hc = <HookCaller 'he_method1'>
+addmeth = <test_hookcaller.AddMeth object at 0x0000020CF3B06A50>
+
+    def test_call_extra_hook_order(hc: HookCaller, addmeth: AddMeth) -> None:
+        """Ensure that call_extra is calling hooks in the right order."""
+        order = []
+    
+        @addmeth(tryfirst=True)
+        def method1() -> str:
+            order.append("1")
+            return "1"
+    
+        @addmeth()
+        def method2() -> str:
+            order.append("2")
+            return "2"
+    
+        @addmeth(trylast=True)
+        def method3() -> str:
+            order.append("3")
+            return "3"
+    
+        @addmeth(wrapper=True, tryfirst=True)
+        def method4() -> Generator[None, str, str]:
+            order.append("4pre")
+            result = yield
+            order.append("4post")
+            return result
+    
+        @addmeth(wrapper=True)
+        def method5() -> Generator[None, str, str]:
+            order.append("5pre")
+            result = yield
+            order.append("5post")
+            return result
+    
+        @addmeth(wrapper=True, trylast=True)
+        def method6() -> Generator[None, str, str]:
+            order.append("6pre")
+            result = yield
+            order.append("6post")
+            return result
+    
+        def extra1() -> str:
+            order.append("extra1")
+            return "extra1"
+    
+        def extra2() -> str:
+            order.append("extra2")
+            return "extra2"
+    
+        result = hc.call_extra([extra1, extra2], {"arg": "test"})
+>       assert order == [
+            "4pre",
+            "5pre",
+            "6pre",
+            "1",
+            "extra2",
+            "extra1",
+            "2",
+            "3",
+            "6post",
+            "5post",
+            "4post",
+        ]
+E       AssertionError: assert ['6pre', '4pr...a1', '3', ...] == ['4pre', '5pr...'extra1', ...]
+E         
+E         At index 0 diff: '6pre' != '4pre'
+E         Use -v to get more diff
+
+testing\test_hookcaller.py:494: AssertionError
+_____________________ test_register_while_calling[False] ______________________
+
+pm = <pluggy._manager.PluginManager object at 0x0000020CF3B85450>
+historic = False
+
+    @pytest.mark.parametrize("historic", [False, True])
+    def test_register_while_calling(
+        pm: PluginManager,
+        historic: bool,
+    ) -> None:
+        """Test that registering an impl of a hook while it is being called does
+        not affect the call itself, only later calls.
+    
+        For historic hooks however, the hook is called immediately on registration.
+    
+        Regression test for #438.
+        """
+        hookspec = HookspecMarker("example")
+    
+        class Hooks:
+            @hookspec(historic=historic)
+            def configure(self) -> int:
+                raise NotImplementedError()
+    
+        class Plugin1:
+            @hookimpl
+            def configure(self) -> int:
+                return 1
+    
+        class Plugin2:
+            def __init__(self) -> None:
+                self.already_registered = False
+    
+            @hookimpl
+            def configure(self) -> int:
+                if not self.already_registered:
+                    pm.register(Plugin4())
+                    pm.register(Plugin5())
+                    pm.register(Plugin6())
+                    self.already_registered = True
+                return 2
+    
+        class Plugin3:
+            @hookimpl
+            def configure(self) -> int:
+                return 3
+    
+        class Plugin4:
+            @hookimpl(tryfirst=True)
+            def configure(self) -> int:
+                return 4
+    
+        class Plugin5:
+            @hookimpl()
+            def configure(self) -> int:
+                return 5
+    
+        class Plugin6:
+            @hookimpl(trylast=True)
+            def configure(self) -> int:
+                return 6
+    
+        pm.add_hookspecs(Hooks)
+        pm.register(Plugin1())
+        pm.register(Plugin2())
+        pm.register(Plugin3())
+    
+        if not historic:
+            result = pm.hook.configure()
+            assert result == [3, 2, 1]
+            result = pm.hook.configure()
+>           assert result == [4, 5, 3, 2, 1, 6]
+E           assert [6, 5, 3, 2, 1, 4] == [4, 5, 3, 2, 1, 6]
+E             
+E             At index 0 diff: 6 != 4
+E             Use -v to get more diff
+
+testing\test_pluginmanager.py:764: AssertionError
+______________________ test_register_while_calling[True] ______________________
+
+pm = <pluggy._manager.PluginManager object at 0x0000020CF3B87950>
+historic = True
+
+    @pytest.mark.parametrize("historic", [False, True])
+    def test_register_while_calling(
+        pm: PluginManager,
+        historic: bool,
+    ) -> None:
+        """Test that registering an impl of a hook while it is being called does
+        not affect the call itself, only later calls.
+    
+        For historic hooks however, the hook is called immediately on registration.
+    
+        Regression test for #438.
+        """
+        hookspec = HookspecMarker("example")
+    
+        class Hooks:
+            @hookspec(historic=historic)
+            def configure(self) -> int:
+                raise NotImplementedError()
+    
+        class Plugin1:
+            @hookimpl
+            def configure(self) -> int:
+                return 1
+    
+        class Plugin2:
+            def __init__(self) -> None:
+                self.already_registered = False
+    
+            @hookimpl
+            def configure(self) -> int:
+                if not self.already_registered:
+                    pm.register(Plugin4())
+                    pm.register(Plugin5())
+                    pm.register(Plugin6())
+                    self.already_registered = True
+                return 2
+    
+        class Plugin3:
+            @hookimpl
+            def configure(self) -> int:
+                return 3
+    
+        class Plugin4:
+            @hookimpl(tryfirst=True)
+            def configure(self) -> int:
+                return 4
+    
+        class Plugin5:
+            @hookimpl()
+            def configure(self) -> int:
+                return 5
+    
+        class Plugin6:
+            @hookimpl(trylast=True)
+            def configure(self) -> int:
+                return 6
+    
+        pm.add_hookspecs(Hooks)
+        pm.register(Plugin1())
+        pm.register(Plugin2())
+        pm.register(Plugin3())
+    
+        if not historic:
+            result = pm.hook.configure()
+            assert result == [3, 2, 1]
+            result = pm.hook.configure()
+            assert result == [4, 5, 3, 2, 1, 6]
+        else:
+            result = []
+            pm.hook.configure.call_historic(result.append)
+            assert result == [4, 5, 6, 3, 2, 1]
+            result = []
+            pm.hook.configure.call_historic(result.append)
+>           assert result == [4, 5, 3, 2, 1, 6]
+E           assert [6, 5, 3, 2, 1, 4] == [4, 5, 3, 2, 1, 6]
+E             
+E             At index 0 diff: 6 != 4
+E             Use -v to get more diff
+
+testing\test_pluginmanager.py:771: AssertionError
+_ TestGetterSetter.test_pluginmanager_project_name_is_property_and_usage_unchanged _
+
+args = (<test_refactoring.TestGetterSetter object at 0x0000020CF393A490>,)
+kwargs = {}
+
+    @functools.wraps(test_item)
+    def skip_wrapper(*args, **kwargs):
+>       raise SkipTest(reason)
+E       unittest.case.SkipTest: only when getter setter refactoring is applied
+
+..\AppData\Local\Programs\Python\Python314\Lib\unittest\case.py:165: SkipTest
+=============================== tests coverage ================================
+_______________ coverage: platform win32, python 3.14.2-final-0 _______________
+
+Name                      Stmts   Miss  Cover   Missing
+-------------------------------------------------------
+src\pluggy\__init__.py       19      0   100%
+src\pluggy\_callers.py       99      0   100%
+src\pluggy\_hooks.py        250      0   100%
+src\pluggy\_manager.py      235      0   100%
+src\pluggy\_result.py        52      0   100%
+src\pluggy\_tracing.py       44      0   100%
+src\pluggy\_warnings.py       6      0   100%
+-------------------------------------------------------
+TOTAL                       705      0   100%
+=========================== short test summary info ===========================
+FAILED testing/test_hookcaller.py::test_adding_nonwrappers_trylast - assert [...
+FAILED testing/test_hookcaller.py::test_adding_nonwrappers_trylast3 - assert ...
+FAILED testing/test_hookcaller.py::test_adding_nonwrappers_trylast2 - assert ...
+FAILED testing/test_hookcaller.py::test_adding_wrappers_ordering_tryfirst - a...
+FAILED testing/test_hookcaller.py::test_adding_wrappers_complex - assert [<fu...
+FAILED testing/test_hookcaller.py::test_call_extra_hook_order - AssertionErro...
+FAILED testing/test_pluginmanager.py::test_register_while_calling[False] - as...
+FAILED testing/test_pluginmanager.py::test_register_while_calling[True] - ass...
+FAILED testing/test_refactoring.py::TestGetterSetter::test_pluginmanager_project_name_is_property_and_usage_unchanged
+======================== 9 failed, 597 passed in 1.25s ========================
+
+
+=== PYTEST STDERR ===
+

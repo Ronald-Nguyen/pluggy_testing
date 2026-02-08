@@ -8,7 +8,7 @@ from datetime import datetime
 from pathlib import Path
 
 PROJECT_SRC_PATH = Path("src/pluggy")
-REFACTORED_ROOT_PATH = Path("refactoring/coc_reduktion_results_gemini-3-pro-preview")
+REFACTORED_ROOT_PATH = Path("refactoring/rename_results_gemini-3-pro-preview")
 TEST_RESULTS_ROOT = Path("test_results") / REFACTORED_ROOT_PATH
 
 ITERATION_PREFIX = "iteration_"
