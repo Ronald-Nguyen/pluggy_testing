@@ -114,7 +114,7 @@ class PluginManager:
                 if hook is None:
                     hook = HookCaller(name, self._hookexec)
                     setattr(self.hook, name, hook)
-                elif hook.has_spec():
+                elif hook.has_specification():
                     self._verify_hook(hook, hookimpl)
                     hook._maybe_apply_history(hookimpl)
                 hook._add_hookimpl(hookimpl)
@@ -272,7 +272,7 @@ class PluginManager:
             if name[0] == "_":
                 continue
             hook: HookCaller = getattr(self.hook, name)
-            if not hook.has_spec():
+            if not hook.has_specification():
                 for hookimpl in hook.get_hookimpls():
                     if not hookimpl.optionalhook:
                         raise PluginValidationError(

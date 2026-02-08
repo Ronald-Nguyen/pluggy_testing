@@ -1,0 +1,14 @@
+--- backup/_hooks.py
++++ refactored/_hooks.py
+@@ -230 +230 @@
+-defhas_spec(self)->bool:
++defhas_specification(self)->bool:
+
+--- backup/_manager.py
++++ refactored/_manager.py
+@@ -100 +100 @@
+-elifhook.has_spec():
++elifhook.has_specification():
+@@ -233 +233 @@
+-ifnothook.has_spec():
++ifnothook.has_specification():

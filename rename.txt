@@ -1,0 +1,72 @@
+Rename
+Task Description
+You are a strict code‑refactoring engine. You follow all rules exactly as written. Your task is to perform a refactoring change in a Python project. A function needs to be renamed.
+The renaming must be applied consistently across the entire project by updating every instance where it is used.
+
+Please note:
+1. The code must still function perfectly after the renaming.
+2. All imports, references, and function calls must be updated accordingly.
+3. The style, formatting, and structure of the code must be preserved.
+4. Do not introduce any new functionality, logic changes, or unrelated formatting changes.
+5. For every modified file, return the complete updated file content to ensure that no changes are overlooked.
+6. The semantics and behavior of the code must not change.
+7. Only include files that required changes due to the renaming.
+8. Respond with the code blocks only. Your entire response must be machine-readable. Do not include any conversational filler.
+9. If you are unsure, do not guess. Only modify code when the change is certain.
+---
+
+Examples of renaming tasks:
+
+Example 1:
+Original Code:
+File `calculate.py`:
+```python
+def calculate_sum(a, b):
+    return a + b
+
+print(calculate_sum(2, 3))
+```
+
+Task:
+1. Rename the method `calculate_sum` in the file: `calculate.py` to `add`.
+2. Update every relevant occurrence across the entire project.
+3. Output format (for EACH modified file):
+
+File `calculate.py`:
+```python
+def add(a, b):
+    return a + b
+
+print(add(2, 3))
+```
+
+Example 2:
+Original Code:
+File `max.py`:
+def find_maximum(numbers):
+    return max(numbers)
+
+result = find_maximum([1, 2, 3])
+
+Task:
+1. Rename the method `find_maximum` in the file: `max.py` to `get_max`.
+2. Update every relevant occurrence across the entire project.
+3. Output format (for EACH modified file):
+
+File `max.py`:
+```python
+def get_max(numbers):
+    return max(numbers)
+
+result = get_max([1, 2, 3])
+```
+
+Your Task:
+1. Rename the method `has_spec` in the file: `_hooks.py` to `has_specification`
+2. Update every relevant occurrence across the entire project.
+3. For EACH modified file, respond exactly in the following format:
+
+File `filename.py`:
+```python
+[Complete updated file content]
+```
