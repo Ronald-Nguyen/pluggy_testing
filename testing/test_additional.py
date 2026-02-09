@@ -1,10 +1,12 @@
-from types import SimpleNamespace
 import re
+from types import SimpleNamespace
+from typing import cast
 
 import pytest
 
 from pluggy import HookspecMarker
 from pluggy import PluginManager
+from pluggy._hooks import HookimplOpts
 from pluggy._hooks import normalize_hookimpl_opts
 from pluggy._hooks import varnames
 from pluggy._result import Result
@@ -139,8 +141,11 @@ class PluginClass:
     pass
 
 
-named_instance = PluginClass()
-named_instance.__name__ = "instance_name"
+class NamedPlugin:
+    __name__ = "instance_name"
+
+
+named_instance = NamedPlugin()
 namespace_plugin = SimpleNamespace(__name__="namespace_plugin")
 
 
@@ -301,6 +306,76 @@ def test_format_message_with_extra(
 
 
 @pytest.mark.parametrize(
+    (
+        "tags",
+        "args",
+        "writer_enabled",
+        "processor_tags",
+        "expect_writer",
+        "expect_processor",
+    ),
+    [
+        (("a",), ("msg",), True, "a", True, True),
+        (("a",), ("msg",), True, ("other",), True, False),
+        (("a",), ("msg",), False, "a", False, True),
+        (("a",), ("msg",), False, None, False, False),
+        (("a",), (), True, "a", False, True),
+        (("a",), (), True, ("other",), False, False),
+        (("a",), (), False, "a", False, True),
+        (("a",), (), False, None, False, False),
+        (("a", "b"), ("x",), True, "a:b", True, True),
+        (("a", "b"), ("x",), True, ("other",), True, False),
+        (("a", "b"), ("x",), False, "a:b", False, True),
+        (("a", "b"), ("x",), False, None, False, False),
+        (("a", "b"), ("x", "y"), True, ("a", "b"), True, True),
+        (("a", "b"), ("x", "y"), True, ("other",), True, False),
+        (("a", "b"), ("x", "y"), False, ("a", "b"), False, True),
+        (("a", "b"), ("x", "y"), False, None, False, False),
+        (("x",), ("1", {"k": 1}), True, "x", True, True),
+        (("x",), ("1", {"k": 1}), True, ("other",), True, False),
+        (("x",), ("1", {"k": 1}), False, "x", False, True),
+        (("x",), ("1", {"k": 1}), False, None, False, False),
+        (("x",), ("",), True, "x", True, True),
+        (("x",), ("",), True, ("other",), True, False),
+        (("x",), ("",), False, "x", False, True),
+        (("x",), ("",), False, None, False, False),
+        (("root", "child"), ("val",), True, "root:child", True, True),
+        (("root", "child"), ("val",), True, ("other",), True, False),
+        (("root", "child"), ("val",), False, "root:child", False, True),
+        (("root", "child"), ("val",), False, None, False, False),
+        (("root", "child"), (), True, "root:child", False, True),
+        (("root", "child"), (), True, ("other",), False, False),
+        (("root", "child"), (), False, "root:child", False, True),
+        (("root", "child"), (), False, None, False, False),
+    ],
+)
+def test_processmessage_writer_and_processor(
+    tags: tuple[str, ...],
+    args: tuple[object, ...],
+    writer_enabled: bool,
+    processor_tags: str | tuple[str, ...] | None,
+    expect_writer: bool,
+    expect_processor: bool,
+) -> None:
+    tracer = TagTracer()
+    messages: list[str] = []
+    seen: list[tuple[tuple[str, ...], tuple[object, ...]]] = []
+    if writer_enabled:
+        tracer.setwriter(messages.append)
+    if processor_tags is not None:
+        tracer.setprocessor(processor_tags, lambda tag, arg: seen.append((tag, arg)))
+    tracer._processmessage(tags, args)
+    if expect_writer:
+        assert messages == [tracer._format_message(tags, args)]
+    else:
+        assert messages == []
+    if expect_processor:
+        assert seen == [(tags, args)]
+    else:
+        assert seen == []
+
+
+@pytest.mark.parametrize(
     ("func_or_class", "expected"),
     [
         pytest.param(fn_no_args, ((), ()), id="no-args"),
@@ -359,7 +434,7 @@ def test_varnames_signatures(
     ],
 )
 def test_result_force_result_clears_exception(value: object) -> None:
-    def raise_value_error() -> None:
+    def raise_value_error() -> object:
         raise ValueError("boom")
 
     result = Result.from_call(raise_value_error)
@@ -393,6 +468,50 @@ def test_result_force_exception_overrides_result(exc: BaseException) -> None:
     with pytest.raises(type(exc)) as raised:
         result.get_result()
     assert raised.value is exc
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        0,
+        1,
+        -1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        1.5,
+        -2.5,
+        "text",
+        "",
+        "alpha",
+        "beta",
+        "gamma",
+        ("tuple",),
+        ("a", 1),
+        ("x", "y", "z"),
+        [1, 2],
+        [],
+        ["a", "b"],
+        {"a": 1},
+        {"b": 2},
+        {"nested": {"c": 3}},
+        True,
+        False,
+        None,
+        object(),
+        (1, 2, 3, 4),
+    ],
+)
+def test_result_from_call_success(value: object) -> None:
+    result = Result.from_call(lambda: value)
+    assert result.get_result() == value
+    assert result.exception is None
+    assert result.excinfo is None
 
 
 @pytest.mark.parametrize(
@@ -576,8 +695,8 @@ def test_setprocessor_matches_tags(
 )
 def test_normalize_hookimpl_opts_sets_defaults(opts: dict[str, object]) -> None:
     working = dict(opts)
-    normalize_hookimpl_opts(working)
-    expected = {
+    normalize_hookimpl_opts(cast(HookimplOpts, working))
+    expected: dict[str, object] = {
         "wrapper": False,
         "hookwrapper": False,
         "optionalhook": False,
