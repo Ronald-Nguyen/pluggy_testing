@@ -336,9 +336,9 @@ def test_format_message_with_extra(
     ],
 )
 def test_varnames_signatures(
-    callable_obj: object, expected: tuple[tuple[str, ...], tuple[str, ...]]
+    func_or_class: object, expected: tuple[tuple[str, ...], tuple[str, ...]]
 ) -> None:
-    assert varnames(callable_obj) == expected
+    assert varnames(func_or_class) == expected
 
 
 @pytest.mark.parametrize(
@@ -359,7 +359,10 @@ def test_varnames_signatures(
     ],
 )
 def test_result_force_result_clears_exception(value: object) -> None:
-    result = Result.from_call(lambda: 1 / 0)
+    def raise_value_error() -> None:
+        raise ValueError("boom")
+
+    result = Result.from_call(raise_value_error)
     result.force_result(value)
     assert result.get_result() == value
     assert result.exception is None
@@ -446,9 +449,9 @@ def test_verify_all_args_warns(
             pass
 
     pm.add_hookspecs(Spec)
-    missing_names = ", ".join(repr(name) for name in missing)
+    missing_args_str = ", ".join(repr(name) for name in missing)
     pattern = re.escape(
-        f"Argument(s) {missing_names} which are declared in the hookspec "
+        f"Argument(s) {missing_args_str} which are declared in the hookspec "
         "cannot be found in this hook call"
     )
     if call_type == "direct":
@@ -486,9 +489,9 @@ def test_verify_all_args_warns_historic(
             pass
 
     pm.add_hookspecs(Spec)
-    missing_names = ", ".join(repr(name) for name in missing)
+    missing_args_str = ", ".join(repr(name) for name in missing)
     pattern = re.escape(
-        f"Argument(s) {missing_names} which are declared in the hookspec "
+        f"Argument(s) {missing_args_str} which are declared in the hookspec "
         "cannot be found in this hook call"
     )
     if call_type == "historic":
