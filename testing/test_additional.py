@@ -301,7 +301,7 @@ def test_format_message_with_extra(
 
 
 @pytest.mark.parametrize(
-    ("callable_obj", "expected"),
+    ("func_or_class", "expected"),
     [
         pytest.param(fn_no_args, ((), ()), id="no-args"),
         pytest.param(fn_one, (("a",), ()), id="one-arg"),
